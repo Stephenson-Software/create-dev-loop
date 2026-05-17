@@ -90,7 +90,8 @@ Create `~/local-skills/<slug>-dev-loop/<slug>-dev-loop.md` using the template be
 Autonomous iterative development loop for {{PROJECT_NAME}}.
 
 **Working directory:** {{REPO_ROOT}}
-**GitHub repo:** {{GITHUB_OWNER}}/{{GITHUB_REPO}}
+**Project repo:** {{GITHUB_OWNER}}/{{GITHUB_REPO}}
+**Skill repo:** dmccoystephenson/<slug>-dev-loop (issues for self-audit findings go here)
 {{#if CLAUDE_MD}}**Project guidance:** read `CLAUDE.md` at the start of each cycle if context is cold.{{/if}}
 
 ---
@@ -295,7 +296,7 @@ Review for any of the following:
 - Project conventions discovered during implementation that the skill should encode
 - Phases that required significantly more or fewer steps than expected
 
-Note any gaps explicitly. If the skill has a home repo, file issues there for human review — do not self-merge changes to the skill.
+Note any gaps explicitly. File issues in the skill repo (`dmccoystephenson/<slug>-dev-loop`) for human review — do not self-merge changes to the skill.
 
 ---
 
@@ -381,15 +382,35 @@ repo-specific choices made (build system, test command, doc sources, reviewer, b
 
 ---
 
-### 6 — Record the skill in a-private-repo-3
+### 6 — Create a private GitHub repo for the skill
 
-Open `~/a-private-repo-3/README.md` and append a new row to the skills table:
-
-```
-| <slug>-dev-loop | `/<slug>-dev-loop` | [{{GITHUB_OWNER}}/{{GITHUB_REPO}}](https://github.com/{{GITHUB_OWNER}}/{{GITHUB_REPO}}) | Autonomous dev loop for {{PROJECT_NAME}} |
+```bash
+gh repo create <slug>-dev-loop --private --description "Autonomous dev loop skill for {{PROJECT_NAME}}"
 ```
 
-Use the actual `GITHUB_OWNER`, `GITHUB_REPO`, and `PROJECT_NAME` values resolved in Step 4. If the skill has no GitHub repo (local-only), put `~/local-skills/<slug>-dev-loop/` in the Source column instead of a link.
+Initialize the local skill directory as a git repo, commit the skill file, and push:
+
+```bash
+cd ~/local-skills/<slug>-dev-loop
+git init
+git branch -m main
+git remote add origin https://github.com/$(gh api user -q .login)/<slug>-dev-loop.git
+git add <slug>-dev-loop.md
+git commit -m "Initial commit: <slug>-dev-loop skill"
+git push -u origin main
+```
+
+The GitHub repo serves as the issue tracker for self-audit findings. When the generated skill's Phase 9 says "file issues there for human review", issues go here.
+
+---
+
+### 7 — Record the skill in a-private-repo-3
+
+Open `~/a-private-repo-3/README.md` and append a new row to the skills table using the GitHub repo created in Step 6:
+
+```
+| <slug>-dev-loop | `/<slug>-dev-loop` | [dmccoystephenson/<slug>-dev-loop](https://github.com/dmccoystephenson/<slug>-dev-loop) | Autonomous dev loop for {{PROJECT_NAME}} |
+```
 
 Then commit and push:
 
