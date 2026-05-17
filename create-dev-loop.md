@@ -104,9 +104,16 @@ Autonomous iterative development loop for {{PROJECT_NAME}}.
 \`\`\`bash
 cd {{REPO_ROOT}}
 git checkout {{DEFAULT_BRANCH}} && git pull
+gh pr list --state open
 gh issue list --state open
 git log --oneline -10
 \`\`\`
+
+**Check for open PRs from previous cycles first.** If any open PR exists, decide before doing anything else:
+- If the PR is still valid (tests green, no conflicts), jump to Phase 5 to re-poll for review.
+- If the PR is stale or conflicted, close it with a comment explaining why, then proceed with triage.
+
+Do not open a new PR while one is already open against the same repo.
 
 **Close stale-open issues first.** Check whether any open issues were resolved by
 recent PRs but not yet closed. Cross-reference `git log` against open issue titles:
@@ -274,9 +281,25 @@ gh issue list --state open
 gh issue close <number> --comment "Resolved in PR #<n>."
 \`\`\`
 
+**Proceed to Phase 9.** Do not stop here — the self-audit is mandatory whether or not anything was implemented.
+
 ---
 
-### Phase 9 — Next cycle
+### Phase 9 — Self-audit
+
+Before returning to Phase 1, reflect on the cycle just completed.
+
+Review for any of the following:
+- Instructions that were ambiguous or caused a wrong first attempt
+- Edge cases encountered that are not covered in this skill
+- Project conventions discovered during implementation that the skill should encode
+- Phases that required significantly more or fewer steps than expected
+
+Note any gaps explicitly. If the skill has a home repo, file issues there for human review — do not self-merge changes to the skill.
+
+---
+
+### Phase 10 — Next cycle
 
 Return to Phase 1.
 
@@ -288,6 +311,19 @@ Return to Phase 1.
 **Tests fail after addressing a comment:** same rule.
 **A review comment is a false positive:** reply with evidence, do not apply the change.
 {{#if REVIEWER}}**Reviewer addition fails:** perform the self-review described in Phase 4. Do not skip to Phase 5 without leaving comments — the self-review is the substitute, and Phase 6 addresses those comments like any other review.{{/if}}
+**Branch is behind main or has a merge conflict at Phase 8:** rebase onto main, re-run tests, and force-push before retrying the merge:
+\`\`\`bash
+git fetch origin
+git rebase origin/{{DEFAULT_BRANCH}}
+{{TEST_CMD}}
+git push --force-with-lease
+\`\`\`
+If the rebase produces conflicts that cannot be resolved automatically, close the PR and delete the branch, then return to Phase 1:
+\`\`\`bash
+gh pr close <number> --comment "Closing: unresolvable merge conflict after rebase."
+git checkout {{DEFAULT_BRANCH}}
+git push origin --delete {{BRANCH_PREFIX}}/<name>
+\`\`\`
 **Two issues conflict mid-implementation:** finish the further-along one; file a note on the other.
 **No issues and no improvements found:** report what was checked; end the loop.
 ```
@@ -305,8 +341,8 @@ Use findings from Step 2 to substitute each `{{placeholder}}`:
 | `GITHUB_OWNER/REPO` | `gh repo view --json nameWithOwner -q .nameWithOwner` |
 | `DEFAULT_BRANCH` | `gh repo view --json defaultBranchRef -q .defaultBranchRef.name` |
 | `BRANCH_PREFIX` | From CONTRIBUTING.md, or `feature` if not specified |
-| `COMPILE_CMD` | Fastest command that catches syntax/import errors without running tests |
-| `TEST_CMD` | Full test suite command from CI workflow or README |
+| `COMPILE_CMD` | Fastest command that catches syntax/import errors without running tests. For Maven: `MVN=$([ -f ./mvnw ] && echo ./mvnw \|\| echo mvn) && $MVN compile` |
+| `TEST_CMD` | Full test suite command from CI workflow or README. For Maven: `$MVN test` (reuse the `MVN` variable set above) |
 | `LINT_CMD` | Linter/formatter command if present in CI; omit section if absent |
 | `REVIEWER` | Primary reviewer from CODEOWNERS or recent PRs; `Copilot` if configured |
 | `SCAN_CHECKLIST` | Repo-specific anti-patterns found in CLAUDE.md + common ones for the language |
