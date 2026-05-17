@@ -25,6 +25,8 @@ Running `/create-dev-loop` in any repo will:
 2. **Compile** a repo-specific profile — build command, test command, branch prefix, reviewer, doc sources, code patterns
 3. **Generate** a ready-to-use `<slug>-dev-loop` skill file at `~/local-skills/<slug>-dev-loop/`
 4. **Register** it as a slash command at `~/.claude/commands/<slug>-dev-loop.md`
+5. **Create** a private GitHub repo (`<slug>-dev-loop`) to serve as the issue tracker for self-audit findings
+6. **Record** the skill in `~/a-private-repo-3/README.md` for discoverability
 
 The generated skill drives a 10-phase loop: triage → work selection → implementation → PR → review → address comments → doc check → merge → self-audit → repeat.
 

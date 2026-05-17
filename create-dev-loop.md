@@ -194,7 +194,10 @@ Request a review:
 gh pr edit <number> --add-reviewer {{REVIEWER}}
 \`\`\`
 
-If the command errors (reviewer not configured), perform a self-review instead:
+If the command errors (reviewer not configured), proceed directly to the self-review below.
+
+{{/if}}
+Perform a self-review:
 
 1. Read the full diff:
    \`\`\`bash
@@ -217,7 +220,6 @@ If the command errors (reviewer not configured), perform a self-review instead:
    \`\`\`
    Use the actual file line number for `line` (read the source, do not guess from diff position). Use `"side": "RIGHT"` for added or changed lines. Omit `comments` entirely if there are no lines worth anchoring. If there are no findings, post `"Self-review: no issues found."` with an empty comments array.
 4. Proceed to Phase 5 — address your own comments in Phase 6.
-{{/if}}
 
 ---
 
@@ -311,7 +313,7 @@ Return to Phase 1.
 **Tests fail during implementation:** diagnose; never skip or use `--no-verify`.
 **Tests fail after addressing a comment:** same rule.
 **A review comment is a false positive:** reply with evidence, do not apply the change.
-{{#if REVIEWER}}**Reviewer addition fails:** perform the self-review described in Phase 4. Do not skip to Phase 5 without leaving comments — the self-review is the substitute, and Phase 6 addresses those comments like any other review.{{/if}}
+{{#if REVIEWER}}**Reviewer addition fails:** proceed to the self-review step in Phase 4. Do not skip to Phase 5 without posting self-review comments — Phase 6 addresses those comments like any other review.{{/if}}
 **Branch is behind main or has a merge conflict at Phase 8:** rebase onto main, re-run tests, and force-push before retrying the merge:
 \`\`\`bash
 git fetch origin
@@ -350,6 +352,7 @@ Use findings from Step 2 to substitute each `{{placeholder}}`:
 | `CODE_PATTERNS` | Bullet list from CLAUDE.md; omit section if no CLAUDE.md |
 | `TEST_GUIDANCE` | Framework name, naming convention, file location, any fake/mock patterns |
 | `DOC_CHECK_TABLE` | One row per documentation source of truth identified in Step 2 |
+| `CLAUDE_MD` | True if `CLAUDE.md` exists in the repo root (`ls CLAUDE.md 2>/dev/null`); controls whether the "Project guidance" line appears in the skill header |
 
 For `SCAN_CHECKLIST`, always include these universal items plus any repo-specific ones:
 - Missing tests on new public methods
