@@ -378,3 +378,24 @@ ls -la ~/.claude/commands/<slug>-dev-loop.md
 
 Report the skill name (`/<slug>-dev-loop`) and a one-paragraph summary of the key
 repo-specific choices made (build system, test command, doc sources, reviewer, branch prefix).
+
+---
+
+### 6 — Record the skill in my-claude-skills
+
+Open `~/my-claude-skills/README.md` and append a new row to the skills table:
+
+```
+| <slug>-dev-loop | `/<slug>-dev-loop` | [{{GITHUB_OWNER}}/{{GITHUB_REPO}}](https://github.com/{{GITHUB_OWNER}}/{{GITHUB_REPO}}) | Autonomous dev loop for {{PROJECT_NAME}} |
+```
+
+Use the actual `GITHUB_OWNER`, `GITHUB_REPO`, and `PROJECT_NAME` values resolved in Step 4. If the skill has no GitHub repo (local-only), put `~/local-skills/<slug>-dev-loop/` in the Source column instead of a link.
+
+Then commit and push:
+
+```bash
+cd ~/my-claude-skills
+git add README.md
+git commit -m "Add <slug>-dev-loop skill"
+git push
+```
