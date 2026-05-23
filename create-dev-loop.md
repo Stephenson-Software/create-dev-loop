@@ -307,8 +307,8 @@ gh issue close <number> --comment "Resolved in PR #<n>."
 
 3. **For each gap not already tracked, file an issue:**
    \`\`\`bash
-   gh issue create --repo dmccoystephenson/<slug>-dev-loop \\
-     --title "<short description of the gap>" \\
+   gh issue create --repo dmccoystephenson/<slug>-dev-loop \
+     --title "<short description of the gap>" \
      --body "<what was ambiguous or missing, and suggested instruction text>"
    \`\`\`
 
