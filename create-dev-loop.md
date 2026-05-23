@@ -162,6 +162,10 @@ Follow project conventions:
 {{CODE_PATTERNS}}
 {{/if}}
 
+Universal rules:
+- **Match sibling structure.** Before creating a new file in a directory, read the section headers / structure of every existing file in the same directory and conform to the established pattern. Example: `grep "^##" path/to/dir/*.md` for docs, or read 2–3 neighboring source files for code.
+- **Rename siblings together.** When renaming a heading or identifier that is part of a parallel pair or series (e.g. `Required X` / `Optional X`, `loadConfig` / `saveConfig`), scan for the siblings and rename them in the same commit.
+
 Write or update tests for every change:
 {{TEST_GUIDANCE}}
 
@@ -290,15 +294,27 @@ gh issue close <number> --comment "Resolved in PR #<n>."
 
 ### Phase 9 — Self-audit
 
-Before returning to Phase 1, reflect on the cycle just completed.
+1. **Check for duplicates** before filing:
+   \`\`\`bash
+   gh issue list --repo dmccoystephenson/<slug>-dev-loop --state open
+   \`\`\`
 
-Review for any of the following:
-- Instructions that were ambiguous or caused a wrong first attempt
-- Edge cases encountered that are not covered in this skill
-- Project conventions discovered during implementation that the skill should encode
-- Phases that required significantly more or fewer steps than expected
+2. **Reflect on the cycle just completed.** Review for any of the following:
+   - Instructions that were ambiguous or caused a wrong first attempt
+   - Edge cases encountered that are not covered in this skill
+   - Project conventions discovered during implementation that the skill should encode
+   - Phases that required significantly more or fewer steps than expected
 
-Note any gaps explicitly. File issues in the skill repo (`dmccoystephenson/<slug>-dev-loop`) for human review — do not self-merge changes to the skill.
+3. **For each gap not already tracked, file an issue:**
+   \`\`\`bash
+   gh issue create --repo dmccoystephenson/<slug>-dev-loop \\
+     --title "<short description of the gap>" \\
+     --body "<what was ambiguous or missing, and suggested instruction text>"
+   \`\`\`
+
+4. **Do not implement or merge changes to the skill itself** — file issues only so a human reviews and approves skill edits.
+
+5. If nothing notable is found, note that explicitly and proceed.
 
 ---
 
@@ -312,6 +328,7 @@ Return to Phase 1.
 
 **Tests fail during implementation:** diagnose; never skip or use `--no-verify`.
 **Tests fail after addressing a comment:** same rule.
+**A test fails intermittently (suspected flake):** re-run the test command once. If the same test fails again, treat it as a real failure and investigate. If it passes on the second run, note the flake in the PR body and proceed — do not suppress or `@Ignore` a test without understanding why it is flaky.
 **A review comment is a false positive:** reply with evidence, do not apply the change.
 {{#if REVIEWER}}**Reviewer addition fails:** proceed to the self-review step in Phase 4. Do not skip to Phase 5 without posting self-review comments — Phase 6 addresses those comments like any other review.{{/if}}
 **Branch is behind main or has a merge conflict at Phase 8:** rebase onto main, re-run tests, and force-push before retrying the merge:
@@ -335,7 +352,7 @@ git push origin --delete {{BRANCH_PREFIX}}/<name>
 
 ### 4 — Fill in the placeholders
 
-Use findings from Step 2 to substitute each `{{placeholder}}`:
+Use findings from Step 2 to substitute each `{{placeholder}}`. The table below covers both direct substitutions (`{{VAR}}`) and conditional flags (`{{#if VAR}}…{{/if}}`) — every `{{…}}` token in the template, whether a value or a condition, needs a row.
 
 | Placeholder | How to determine it |
 |-------------|---------------------|
