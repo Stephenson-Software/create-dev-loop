@@ -19,6 +19,10 @@ Changes to **how repos are explored or how skills are structured** belong in `cr
 
 Repo-specific findings (build commands, reviewer names, branch prefixes) belong **only** in the generated skill, never back-ported here.
 
+## Promoting a rule into the template
+
+When you add a new rule to `create-dev-loop.md` because the same lesson keeps showing up in multiple skills' self-audits, **also open retrofit PRs against every existing skill that predates the change.** The template only fixes drift forward; existing skills will silently lag until their next self-audit cycle. See the "Promoting a carry-over into the template" section of [`a-private-repo-3/CONVENTIONS.md`](https://github.com/dmccoystephenson/a-private-repo-3/blob/main/CONVENTIONS.md) for the checklist.
+
 ## Testing changes
 
 There is no automated test suite. Validate changes by running `/create-dev-loop` against a real repo and confirming:
