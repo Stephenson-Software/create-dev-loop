@@ -2,6 +2,8 @@
 
 Creates a tailored `dev-loop` Claude skill for the current repository by exploring its structure, conventions, and tooling, then writing a ready-to-use skill file and registering it as a slash command.
 
+**Identity:** the kind of skill that produces ready-to-use dev-loops on the first try, with every placeholder substituted from real evidence in the target repo.
+
 ---
 
 ## Steps
@@ -77,6 +79,7 @@ Compile findings into these answers before writing the skill:
 | What permission/config system is used? | Language-specific (plugin.yml, manifest, etc.) |
 | Is there a changelog convention? | CHANGELOG.md format (Keep a Changelog, etc.) |
 | What status check must pass before merge? | CI workflow name + job name |
+| What is this skill's identity? | CLAUDE.md tone, CONTRIBUTING.md priorities, recent PR descriptions, repo README pitch — infer what failure mode the project cares most about and frame the identity to reject it (see Step 4 substitution table for the `IDENTITY` row) |
 
 ---
 
@@ -88,6 +91,8 @@ Create `~/local-skills/<slug>-dev-loop/<slug>-dev-loop.md` using the template be
 # <slug>-dev-loop
 
 Autonomous iterative development loop for {{PROJECT_NAME}}.
+
+**Identity:** the kind of skill that {{IDENTITY}}.
 
 **Working directory:** {{REPO_ROOT}}
 **Project repo:** {{GITHUB_OWNER}}/{{GITHUB_REPO}}
@@ -300,6 +305,7 @@ gh issue close <number> --comment "Resolved in PR #<n>."
    \`\`\`
 
 2. **Reflect on the cycle just completed.** Review for any of the following:
+   - **Identity drift** — did this cycle act in accordance with the identity stated at the top of this skill? If not, that's the most important issue to file.
    - Instructions that were ambiguous or caused a wrong first attempt
    - Edge cases encountered that are not covered in this skill
    - Project conventions discovered during implementation that the skill should encode
@@ -357,6 +363,7 @@ Use findings from Step 2 to substitute each `{{placeholder}}`. The table below c
 | Placeholder | How to determine it |
 |-------------|---------------------|
 | `PROJECT_NAME` | Directory name or `name` field in build file |
+| `IDENTITY` | One sentence completing "the kind of skill that ___". Draft it from the repo's actual posture: read `CLAUDE.md`, `CONTRIBUTING.md`, and 2-3 recent PRs to infer what *this* skill is optimizing for in *this* repo. The identity must **name what the skill actively rejects** (e.g. "never lets the four sources of truth drift"), not just what it pursues. See the Identity statements section of [my-claude-skills/CONVENTIONS.md](https://github.com/dmccoystephenson/my-claude-skills/blob/main/CONVENTIONS.md). |
 | `REPO_ROOT` | Output of `git rev-parse --show-toplevel` |
 | `GITHUB_OWNER/REPO` | `gh repo view --json nameWithOwner -q .nameWithOwner` |
 | `DEFAULT_BRANCH` | `gh repo view --json defaultBranchRef -q .defaultBranchRef.name` |
