@@ -43,6 +43,7 @@ Last reviewed: 2026-05-25.
 
 **Implementations.**
 - PR #15 (Reframe self-review as rubric-based and CI-grounded): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. First applied to PR #26 (one cycle, all rubric items PASS); too early to tell whether the rubric catches real defects that free-form review would miss.
+- PR #34 (Structure Phase 9 self-audit prompts and label gap issues): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Extends the rubric-over-free-form pattern from Phase 4 (self-review) to Phase 9 (self-audit), with a 6-item structured checklist and a 5-label taxonomy for filed gap issues.
 
 ---
 
@@ -131,6 +132,7 @@ Last reviewed: 2026-05-25.
 
 **Implementations.**
 - PR #15 (Reframe self-review as rubric-based and CI-grounded): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds the explicit "one intrinsic-critique pass per PR" cap and the external-vs-internal-signal distinction to the template's Phase 4 and Phase 6.
+- PR #34 (Structure Phase 9 self-audit prompts and label gap issues): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Structured rubric for the retrospective phase mirrors the Phase 4 self-review structure; same plateau-by-iteration-2 logic argues for capping retrospective re-runs at one pass.
 
 ---
 
