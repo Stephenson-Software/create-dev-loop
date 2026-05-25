@@ -401,19 +401,30 @@ gh issue close <number> --comment "Resolved in PR #<n>."
    gh issue list --repo dmccoystephenson/<slug>-dev-loop --state open
    \`\`\`
 
-2. **Reflect on the cycle just completed.** Review for any of the following:
-   - **Identity drift** — did this cycle act in accordance with the identity stated at the top of this skill? If not, that's the most important issue to file.
-   - Instructions that were ambiguous or caused a wrong first attempt
-   - Edge cases encountered that are not covered in this skill
-   - Project conventions discovered during implementation that the skill should encode
-   - Phases that required significantly more or fewer steps than expected
+2. **Run the self-audit rubric.** For each item, mark PASS / FAIL / "no signal this cycle" with a one-line justification grounded in the cycle's actual events:
+   - **Identity drift:** did this cycle act in accordance with the identity stated at the top of this skill?
+   - **Instruction clarity:** did any step require interpretation or produce a wrong first attempt?
+   - **Edge case coverage:** did any failure mode arise that the Edge cases section does not cover?
+   - **Phase friction:** did any phase require significantly more or fewer steps than expected?
+   - **Drift candidates:** did any decision feel like it should be encoded in `create-dev-loop.md` rather than re-discovered each cycle?
+   - **External-signal quality:** did `{{EXTERNAL_SIGNAL_LABEL}}` actually catch the kinds of issues it's supposed to catch this cycle?
 
-3. **For each gap not already tracked, file an issue:**
+   Per RESEARCH.md §1 and §5, structured rubrics outperform free-form prompts for LLM critique — the same logic that grounds the Phase 4 self-review applies to this retrospective.
+
+3. **For each FAIL item not already tracked, file a labeled issue** so triage knows where the gap belongs:
    \`\`\`bash
    gh issue create --repo dmccoystephenson/<slug>-dev-loop \
      --title "<short description of the gap>" \
-     --body "<what was ambiguous or missing, and suggested instruction text>"
+     --body "<what was ambiguous or missing, and suggested instruction text>" \
+     --label <one-of: template-rule | repo-specific | edge-case | research-gap | process>
    \`\`\`
+
+   Label taxonomy:
+   - `template-rule` — should be promoted into `create-dev-loop.md`
+   - `repo-specific` — belongs only in this skill
+   - `edge-case` — should be added to Edge cases
+   - `research-gap` — new finding worth a RESEARCH.md entry
+   - `process` — meta-issue about how the loop runs
 
 4. **Do not implement or merge changes to the skill itself** — file issues only so a human reviews and approves skill edits.
 
@@ -540,6 +551,21 @@ git push -u origin main
 ```
 
 The GitHub repo serves as the issue tracker for self-audit findings. When the generated skill's Phase 9 says "file issues there for human review", issues go here.
+
+Create the gap-issue labels used by Phase 9 so they exist when the first cycle runs:
+
+```bash
+OWNER=$(gh api user -q .login)
+for entry in \
+  "template-rule:FFD700:Should be promoted into create-dev-loop.md" \
+  "repo-specific:0E8A16:Belongs only in this skill" \
+  "edge-case:FBCA04:Should be added to Edge cases" \
+  "research-gap:B60205:New finding worth a RESEARCH.md entry" \
+  "process:CFD3D7:Meta-issue about how the loop runs"; do
+  IFS=: read -r name color desc <<< "$entry"
+  gh label create "$name" --color "$color" --description "$desc" --repo "$OWNER/<slug>-dev-loop"
+done
+```
 
 ---
 
