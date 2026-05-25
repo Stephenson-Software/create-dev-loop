@@ -63,6 +63,7 @@ Last reviewed: 2026-05-25.
 
 **Implementations.**
 - PR #29 (Bias triage and batching toward higher-merge-rate issue types): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds a Phase 2 tiebreaker preferring documentation → CI/build → small refactors → bug fixes → performance, with stronger weighting in early cycles. Targets the merge-rate gradient by issue type; does not yet address the LOC/files ceilings (issue #17 is the structural-gates follow-up).
+- PR #30 (Hard PR scope gates): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds a Phase 3 ~400-net-LOC / ~10-files soft ceiling (~800 / ~20 hard stop) and a Phase 8 do-not-auto-merge path check (universal entries: `.github/workflows/*`, `security/`, >50-line deletions; plus a `{{DO_NOT_AUTO_MERGE}}` placeholder for repo-specific paths). Implements the first bullet of this finding's implications.
 
 ---
 
