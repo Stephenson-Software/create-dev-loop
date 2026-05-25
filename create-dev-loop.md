@@ -89,6 +89,9 @@ Compile findings into these answers before writing the skill:
 Create `~/local-skills/<slug>-dev-loop/<slug>-dev-loop.md` using the template below, substituting all `{{placeholders}}` with findings from Step 2. Remove any section that does not apply (e.g. no changelog → remove changelog row from doc check table).
 
 ```markdown
+<!-- template-version: {{TEMPLATE_VERSION}} -->
+<!-- generated-at: {{GENERATED_AT}} -->
+
 # <slug>-dev-loop
 
 Autonomous iterative development loop for {{PROJECT_NAME}}.
@@ -484,6 +487,8 @@ Use findings from Step 2 to substitute each `{{placeholder}}`. The table below c
 | `CLAUDE_MD` | True if `CLAUDE.md` exists in the repo root (`ls CLAUDE.md 2>/dev/null`); controls whether the "Project guidance" line appears in the skill header |
 | `SELF_REVIEW_RUBRIC` | Repo-specific objective yes/no rubric items for the Phase 4 self-review. Each item must be answerable from the diff or a command output, not from judgment. Add items only when the repo has anti-patterns or invariants not already covered by the universal items in Phase 4. Examples: "Every `@Override` matches a real superclass method" (Java); "No `console.log` in committed code" (JS); "Every new permission appears in `plugin.yml`" (Bukkit plugin). Format as one indented Markdown bullet per item: `   - **<short-name>:** <objective condition>`. Omit the conditional block entirely if no repo-specific items apply. |
 | `DO_NOT_AUTO_MERGE` | Repo-specific paths that require human review before merge (in addition to the universal entries in Phase 8). Common entries: `plugin.yml` (Bukkit plugins), `pom.xml` (Maven projects), `Cargo.toml` (Rust), `package.json` (Node), the project's main config or schema file. Format as one Markdown bullet per entry, with backticks around the path or glob and a brief rationale after an em-dash. Omit the conditional block entirely if no repo-specific entries apply. |
+| `TEMPLATE_VERSION` | Short commit SHA of the `create-dev-loop` repo at generation time. Capture with `git -C <path-to-create-dev-loop> rev-parse --short HEAD`. Becomes part of an HTML comment at the top of the generated skill so future cycles can detect template drift. |
+| `GENERATED_AT` | ISO-8601 UTC timestamp at generation time. Capture with `date -u +%Y-%m-%dT%H:%M:%SZ`. Pairs with `TEMPLATE_VERSION` in the HTML-comment header. |
 
 For `SCAN_CHECKLIST`, always include these universal items plus any repo-specific ones:
 - Missing tests on new public methods
