@@ -187,6 +187,8 @@ Fix all failures before proceeding. Never skip tests or bypass hooks.
 
 ### Phase 4 — PR
 
+**Before pushing, verify each `Closes #N`.** For every issue number you plan to reference, run `gh issue view <N>` and confirm the title and body match what this PR does. Numbers carried forward from earlier session context or from summarized prior cycles are a common source of wrong-issue auto-closes — if a referenced issue describes unrelated work, omit the `Closes` reference and either file a new issue or note `No tracking issue — gap found during triage.` in the PR body.
+
 \`\`\`bash
 git push -u origin {{BRANCH_PREFIX}}/<short-description>
 gh pr create --title "..." --body "..."
