@@ -23,6 +23,16 @@ Repo-specific findings (build commands, reviewer names, branch prefixes) belong 
 
 When you add a new rule to `create-dev-loop.md` because the same lesson keeps showing up in multiple skills' self-audits, **also open retrofit PRs against every existing skill that predates the change.** The template only fixes drift forward; existing skills will silently lag until their next self-audit cycle. See the "Promoting a carry-over into the template" section of [`a-private-repo-3/CONVENTIONS.md`](https://github.com/dmccoystephenson/a-private-repo-3/blob/main/CONVENTIONS.md) for the checklist.
 
+## Grounding work in research
+
+Design decisions for this project should be grounded in empirical research — papers, benchmarks, replicated studies — rather than intuition or vendor marketing. See [`RESEARCH.md`](RESEARCH.md) for the findings that inform the current design.
+
+When proposing a change to `create-dev-loop.md`, the generated template, or a phase definition:
+- Cite the relevant finding(s) from `RESEARCH.md` in the PR description.
+- If no finding applies, say so explicitly — honest "we don't know" beats false confidence.
+- If new research surfaces that affects the project, add the finding to `RESEARCH.md` as part of the same PR (or a precursor one). Include citation, key numbers, confidence level, and the implication for this project.
+- If a finding turns out to be superseded or contradicted, update it in place — don't silently leave stale claims.
+
 ## Testing changes
 
 There is no automated test suite. Validate changes by running `/create-dev-loop` against a real repo and confirming:
@@ -45,3 +55,4 @@ Use `a-private-repo-1` or `a-private-repo-2` as reference implementations when e
 |---|---|
 | `create-dev-loop.md` | Steps, template placeholders, and substitution table are internally consistent |
 | `README.md` | Described behavior matches what `create-dev-loop.md` actually does |
+| `RESEARCH.md` | Empirical findings are accurate, citations resolve, confidence levels reflect the current state of the evidence |
