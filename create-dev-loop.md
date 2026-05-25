@@ -169,6 +169,13 @@ git checkout -b {{BRANCH_PREFIX}}/<short-description>
 
 ### Phase 3 — Implementation
 
+**Localization verification.** Before writing any code, list the files this PR intends to modify and verify each one:
+
+1. **Confirm the file exists.** `test -f <path>` or `ls <path>`.
+2. **Confirm the surface area is present.** For each file, grep for the symbol, heading, config key, or behavior named in the issue. If the issue says "the `validatePermission` method swallows the exception", run `grep -n 'validatePermission' <path>` and confirm the named entity is present. If it isn't, stop and re-triage — the localization is wrong and editing here would produce a misfire.
+
+This catches the dominant agent failure mode on uncontaminated benchmarks: finding the right file to edit, not the patch itself (RESEARCH.md §3).
+
 {{#if CODE_PATTERNS}}
 Follow project conventions:
 {{CODE_PATTERNS}}
@@ -328,6 +335,8 @@ Only proceed when a complete pass finds nothing wrong.
 ---
 
 ### Phase 8 — Merge
+
+**Regression gate.** For each issue in `Closes #N` that is a bug fix or describes incorrect behavior, verify the diff includes a new or modified test (or, for projects whose external anchor is manual validation, a new validation step) that exercises the fix. If absent, do not merge — either add the regression coverage or reclassify the issue. Per RESEARCH.md §3, regression evidence is the only way to distinguish a real fix from a coincidental patch.
 
 **Do-not-auto-merge path check.** Before invoking `gh pr merge`, list the files this PR modifies and check them against the do-not-auto-merge list. If any modified path matches, do not merge automatically — leave the PR open and report to the user for manual review.
 
