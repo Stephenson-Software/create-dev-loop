@@ -190,6 +190,12 @@ Verify the build is clean:
 
 Fix all failures before proceeding. Never skip tests or bypass hooks.
 
+**Scope ceiling.** Before pushing, check the cumulative net diff for this cycle:
+\`\`\`bash
+git diff --stat origin/{{DEFAULT_BRANCH}}
+\`\`\`
+If the diff exceeds **~400 net LOC** or modifies more than **~10 files**, stop and rescope: either drop one of the batched issues from the PR, or split the remaining work into a follow-up PR. Hard stop at **~800 LOC** or **~20 files** — at that size, agent PRs fail to merge at substantially higher rates (RESEARCH.md §2).
+
 ---
 
 ### Phase 4 — PR
@@ -323,6 +329,24 @@ Only proceed when a complete pass finds nothing wrong.
 
 ### Phase 8 — Merge
 
+**Do-not-auto-merge path check.** Before invoking `gh pr merge`, list the files this PR modifies and check them against the do-not-auto-merge list. If any modified path matches, do not merge automatically — leave the PR open and report to the user for manual review.
+
+\`\`\`bash
+git diff --name-only origin/{{DEFAULT_BRANCH}}...HEAD
+\`\`\`
+
+Universal entries (any repo):
+- `.github/workflows/*` — CI config changes affect downstream review/automation gates
+- Any path under a `security/` directory
+- A single file with more than 50 lines deleted (check with `git diff --stat origin/{{DEFAULT_BRANCH}}...HEAD`)
+{{#if DO_NOT_AUTO_MERGE}}
+
+Repo-specific entries:
+{{DO_NOT_AUTO_MERGE}}
+{{/if}}
+
+If no modified path matches, proceed:
+
 \`\`\`bash
 gh pr merge <number> --squash --delete-branch
 git checkout {{DEFAULT_BRANCH}} && git pull
@@ -422,6 +446,7 @@ Use findings from Step 2 to substitute each `{{placeholder}}`. The table below c
 | `DOC_CHECK_TABLE` | One row per documentation source of truth identified in Step 2 |
 | `CLAUDE_MD` | True if `CLAUDE.md` exists in the repo root (`ls CLAUDE.md 2>/dev/null`); controls whether the "Project guidance" line appears in the skill header |
 | `SELF_REVIEW_RUBRIC` | Repo-specific objective yes/no rubric items for the Phase 4 self-review. Each item must be answerable from the diff or a command output, not from judgment. Add items only when the repo has anti-patterns or invariants not already covered by the universal items in Phase 4. Examples: "Every `@Override` matches a real superclass method" (Java); "No `console.log` in committed code" (JS); "Every new permission appears in `plugin.yml`" (Bukkit plugin). Format as one indented Markdown bullet per item: `   - **<short-name>:** <objective condition>`. Omit the conditional block entirely if no repo-specific items apply. |
+| `DO_NOT_AUTO_MERGE` | Repo-specific paths that require human review before merge (in addition to the universal entries in Phase 8). Common entries: `plugin.yml` (Bukkit plugins), `pom.xml` (Maven projects), `Cargo.toml` (Rust), `package.json` (Node), the project's main config or schema file. Format as one Markdown bullet per entry: `- `path/to/file`` or `- glob pattern with rationale`. Omit the conditional block entirely if no repo-specific entries apply. |
 
 For `SCAN_CHECKLIST`, always include these universal items plus any repo-specific ones:
 - Missing tests on new public methods
