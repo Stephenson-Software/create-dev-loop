@@ -36,7 +36,11 @@ The generated skill drives a 10-phase loop: triage → work selection → implem
 /create-dev-loop
 ```
 
-Run this from inside any git repository. If a skill already exists for the repo, you'll be asked whether to overwrite it.
+Run this from inside any git repository. If a skill already exists for the repo, you'll be asked to choose:
+
+- **update** *(default)* — re-derive the skill from the current template and current repo state, then show a diff before overwriting. Use this to pull in template improvements without re-creating the GitHub repo or `my-claude-skills` entry. Aborts if the local skill directory has uncommitted changes.
+- **overwrite** — full regeneration, idempotently re-asserting the repo and registry entry.
+- **cancel** — exit without changes.
 
 The skill reports the command name and a summary of the choices made (build system, test runner, doc sources, reviewer, branch prefix) when it finishes.
 
