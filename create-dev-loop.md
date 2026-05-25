@@ -23,7 +23,25 @@ ls ~/local-skills/<slug>-dev-loop/ 2>/dev/null
 ls ~/.claude/commands/<slug>-dev-loop.md 2>/dev/null
 ```
 
-If one exists, ask the user whether to overwrite it before continuing.
+**If no skill exists**, set `MODE=fresh` and proceed to Step 2. All subsequent steps run.
+
+**If a skill already exists**, ask the user to choose:
+
+- **update** *(default)* — re-derive the skill from the current template and current repo state, producing a fresh skill file. Set `MODE=update`. Steps 2–5 run; Steps 6 (create GitHub repo) and 7 (record in `my-claude-skills`) are skipped because those artifacts already exist.
+- **overwrite** — re-derive and replace as in fresh generation. Set `MODE=overwrite`. Steps 6–7 still run, idempotently re-asserting the repo and registry entry.
+- **cancel** — exit without changes.
+
+Before proceeding in **update mode**, abort if the local skill directory has uncommitted changes:
+```bash
+cd ~/local-skills/<slug>-dev-loop && git status --porcelain
+```
+If the output is non-empty, stop and ask the user to commit or stash their edits — the update would otherwise overwrite in-progress work.
+
+In **update mode**, after Step 4 completes, show the user a diff between the existing skill file and the freshly generated content *before* overwriting:
+```bash
+diff -u ~/local-skills/<slug>-dev-loop/<slug>-dev-loop.md /tmp/<slug>-dev-loop.new.md
+```
+Get explicit confirmation before replacing the file.
 
 ---
 
@@ -534,6 +552,8 @@ repo-specific choices made (build system, test command, doc sources, reviewer, b
 
 ### 6 — Create a private GitHub repo for the skill
 
+**Skip this step if `MODE=update`** — the repo already exists from the initial generation. (Run only when `MODE=fresh` or `MODE=overwrite`.)
+
 ```bash
 gh repo create <slug>-dev-loop --private --description "Autonomous dev loop skill for {{PROJECT_NAME}}"
 ```
@@ -570,6 +590,8 @@ done
 ---
 
 ### 7 — Record the skill in my-claude-skills
+
+**Skip this step if `MODE=update`** — the entry already exists from the initial generation. (Run only when `MODE=fresh` or `MODE=overwrite`.)
 
 Open `~/my-claude-skills/README.md` and append a new row to the skills table using the GitHub repo created in Step 6:
 
