@@ -206,20 +206,47 @@ gh pr edit <number> --add-reviewer {{REVIEWER}}
 If the command errors (reviewer not configured), proceed directly to the self-review below.
 
 {{/if}}
-Perform a self-review:
+Perform a self-review. This step is anchored on external signals (CI, the rubric below) rather than free-form judgment — empirical findings show LLM self-critique without an external signal is unreliable and can regress quality (see RESEARCH.md §1, §5).
 
-1. Read the full diff:
+1. **Wait for CI to be green.** The CI signal is the external anchor for the rubric below; without it, the rubric is just opinion.
+   \`\`\`bash
+   gh pr checks <number> --watch
+   \`\`\`
+   If any required check fails, fix the failure, push, and re-poll. Do not start the rubric until CI is green.
+
+2. **Read the full diff:**
    \`\`\`bash
    gh pr diff <number>
    \`\`\`
-2. Review for: logic errors, missed edge cases, anti-patterns from CLAUDE.md, missing tests on public methods, doc drift.
-3. Post a single review combining a top-level summary and all anchored inline comments:
+
+3. **Run the self-review rubric.** Score each item PASS or FAIL with a one-line justification grounded in the diff or a command output — not in judgment. Frame this adversarially: assume FAIL unless you have direct evidence of PASS. Treat an all-PASS result as suspicious; a reviewer expects you to find at least one issue.
+
+   Universal rubric:
+   - **Scope:** every file modified is necessary for one of the issues in `Closes #N` (no unrelated formatting, renames, or comment churn).
+   - **Tests-new:** every new public method/function has at least one test that exercises it.
+   - **Tests-fix:** for each bug fix, a test exists that would fail without the fix.
+   - **Sibling structure:** every new file matches the section/structure conventions of its directory siblings (Phase 3 rule).
+   - **Sibling renames:** every renamed identifier in a parallel pair/series has its siblings renamed in the same commit (Phase 3 rule).
+   - **Docs:** every row in the Phase 7 documentation sources-of-truth table reflects the new behavior.
+   - **Issue resolution:** every `Closes #N` issue's named surface area is actually changed; no issue is partially resolved while claiming closure.
+   - **CI:** all required status checks pass on the PR head SHA (re-confirms step 1).
+   {{#if SELF_REVIEW_RUBRIC}}
+
+   Repo-specific rubric items:
+{{SELF_REVIEW_RUBRIC}}
+   {{/if}}
+
+4. **For each FAIL item:**
+   - If the fix is mechanical and small, fix it locally, commit, push, and re-score the failed item. Do not re-score items that previously passed.
+   - If the item requires judgment (e.g. "is this scope creep?"), leave it as an inline review comment for Phase 6.
+
+5. **Post the self-review** with the rubric outcomes and any unresolved inline comments:
    \`\`\`bash
    gh api repos/{{GITHUB_OWNER}}/{{GITHUB_REPO}}/pulls/<number>/reviews \
      --method POST \
      --input - <<'JSON'
    {
-     "body": "Self-review: <overall summary>",
+     "body": "Self-review rubric:\n- Scope: PASS — <justification>\n- Tests-new: PASS — <justification>\n- ...\n\n<one-line summary>",
      "event": "COMMENT",
      "comments": [
        { "path": "src/path/to/File.ext", "line": 42, "side": "RIGHT", "body": "Inline comment" }
@@ -227,8 +254,11 @@ Perform a self-review:
    }
    JSON
    \`\`\`
-   Use the actual file line number for `line` (read the source, do not guess from diff position). Use `"side": "RIGHT"` for added or changed lines. Omit `comments` entirely if there are no lines worth anchoring. If there are no findings, post `"Self-review: no issues found."` with an empty comments array.
-4. Proceed to Phase 5 — address your own comments in Phase 6.
+   Use the actual file line number for `line` (read the source, do not guess from diff position). Use `"side": "RIGHT"` for added or changed lines. Omit `comments` entirely if every rubric item passed after fixes and there are no judgment calls to flag.
+
+6. **Cap: one intrinsic-critique pass per PR.** After Phase 6 addresses the rubric's inline comments, do not re-run the rubric internally. Only an external signal — a new reviewer comment or a CI failure — should re-open the iteration loop. Empirical findings (RESEARCH.md §5) show repeated intrinsic critique plateaus by iteration 2 and can regress.
+
+7. Proceed to Phase 5 — address your own comments in Phase 6.
 
 ---
 
@@ -246,6 +276,8 @@ After 5 wakeups (~22 min) with no review, proceed anyway.
 ---
 
 ### Phase 6 — Address comments
+
+**External vs. internal signals.** Comments from a real reviewer and CI failures are *external* signals — keep iterating on them until each is resolved. The self-review rubric posted in Phase 4 is *internal* — once its comments are addressed here, do not re-run the rubric. Per RESEARCH.md §1 and §5, repeated intrinsic critique without an external signal is neutral-to-harmful.
 
 For each comment:
 1. Read the comment. Read the referenced source before changing anything.
@@ -334,6 +366,7 @@ Return to Phase 1.
 
 **Tests fail during implementation:** diagnose; never skip or use `--no-verify`.
 **Tests fail after addressing a comment:** same rule.
+**CI fails on the PR (Phase 4 or later):** treat the failing check as the highest-priority external signal — fix the underlying cause locally, push, and re-poll `gh pr checks --watch` before continuing the rubric or addressing other comments. Do not start or re-run the self-review rubric while CI is red.
 **A test fails intermittently (suspected flake):** re-run the test command once. If the same test fails again, treat it as a real failure and investigate. If it passes on the second run, note the flake in the PR body and proceed — do not suppress or `@Ignore` a test without understanding why it is flaky.
 **A review comment is a false positive:** reply with evidence, do not apply the change.
 {{#if REVIEWER}}**Reviewer addition fails:** proceed to the self-review step in Phase 4. Do not skip to Phase 5 without posting self-review comments — Phase 6 addresses those comments like any other review.{{/if}}
@@ -377,6 +410,7 @@ Use findings from Step 2 to substitute each `{{placeholder}}`. The table below c
 | `TEST_GUIDANCE` | Framework name, naming convention, file location, any fake/mock patterns |
 | `DOC_CHECK_TABLE` | One row per documentation source of truth identified in Step 2 |
 | `CLAUDE_MD` | True if `CLAUDE.md` exists in the repo root (`ls CLAUDE.md 2>/dev/null`); controls whether the "Project guidance" line appears in the skill header |
+| `SELF_REVIEW_RUBRIC` | Repo-specific objective yes/no rubric items for the Phase 4 self-review. Each item must be answerable from the diff or a command output, not from judgment. Add items only when the repo has anti-patterns or invariants not already covered by the universal items in Phase 4. Examples: "Every `@Override` matches a real superclass method" (Java); "No `console.log` in committed code" (JS); "Every new permission appears in `plugin.yml`" (Bukkit plugin). Format as one indented Markdown bullet per item: `   - **<short-name>:** <objective condition>`. Omit the conditional block entirely if no repo-specific items apply. |
 
 For `SCAN_CHECKLIST`, always include these universal items plus any repo-specific ones:
 - Missing tests on new public methods
