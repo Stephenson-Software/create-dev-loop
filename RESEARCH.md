@@ -61,6 +61,9 @@ Last reviewed: 2026-05-25.
 - The merge phase should require green CI as a non-negotiable gate, not self-review approval alone.
 - The generated skill should include explicit human off-ramps: conditions under which the agent must stop and request review rather than auto-merge.
 
+**Implementations.**
+- PR #29 (Bias triage and batching toward higher-merge-rate issue types): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds a Phase 2 tiebreaker preferring documentation → CI/build → small refactors → bug fixes → performance, with stronger weighting in early cycles. Targets the merge-rate gradient by issue type; does not yet address the LOC/files ceilings (issue #17 is the structural-gates follow-up).
+
 ---
 
 ### 3. SWE-bench Verified is inflated; localization is the real bottleneck
@@ -157,6 +160,9 @@ Last reviewed: 2026-05-25.
 **Implication for create-dev-loop.**
 - The triage phase should emit its classification reasoning to the PR description so a human can audit which issues were skipped and why — don't silently filter.
 - Use triage for batching coherence (group related issues) rather than for value judgment ("this is a bad issue"). The literature supports the former better.
+
+**Implementations.**
+- PR #29 (Bias triage and batching toward higher-merge-rate issue types): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds a Phase 1 \"Record skip reasons\" instruction so triage decisions are auditable rather than silent. Does not yet address the deeper \"use triage for batching coherence, not value judgment\" implication beyond the existing 0–3 issue coherent-batch ceiling.
 
 ---
 
