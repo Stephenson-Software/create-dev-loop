@@ -79,6 +79,7 @@ Compile findings into these answers before writing the skill:
 | What permission/config system is used? | Language-specific (plugin.yml, manifest, etc.) |
 | Is there a changelog convention? | CHANGELOG.md format (Keep a Changelog, etc.) |
 | What status check must pass before merge? | CI workflow name + job name |
+| What is the external anchor for self-review? | `.github/workflows/` → label "CI"; `CLAUDE.md` "Testing changes" section → label "manual validation"; otherwise default to running the project's test command locally (see `EXTERNAL_SIGNAL_LABEL` / `EXTERNAL_SIGNAL_CMD` in the Step 4 substitution table) |
 | What is this skill's identity? | CLAUDE.md tone, CONTRIBUTING.md priorities, recent PR descriptions, repo README pitch — infer what failure mode the project cares most about and frame the identity to reject it (see Step 4 substitution table for the `IDENTITY` row) |
 
 ---
@@ -208,13 +209,13 @@ gh pr edit <number> --add-reviewer {{REVIEWER}}
 If the command errors (reviewer not configured), proceed directly to the self-review below.
 
 {{/if}}
-Perform a self-review. This step is anchored on external signals (CI, the rubric below) rather than free-form judgment — empirical findings show LLM self-critique without an external signal is unreliable and can regress quality (see RESEARCH.md §1, §5).
+Perform a self-review. This step is anchored on external signals ({{EXTERNAL_SIGNAL_LABEL}}, the rubric below) rather than free-form judgment — empirical findings show LLM self-critique without an external signal is unreliable and can regress quality (see RESEARCH.md §1, §5).
 
-1. **Wait for CI to be green.** The CI signal is the external anchor for the rubric below; without it, the rubric is just opinion.
-   \`\`\`bash
-   gh pr checks <number> --watch
-   \`\`\`
-   If any required check fails, fix the failure, push, and re-poll. Do not start the rubric until CI is green.
+1. **Wait for {{EXTERNAL_SIGNAL_LABEL}} to be green.** This is the external anchor for the rubric below; without it, the rubric is just opinion.
+
+{{EXTERNAL_SIGNAL_CMD}}
+
+   If it fails, fix the underlying issue, push, and re-confirm. Do not start the rubric until {{EXTERNAL_SIGNAL_LABEL}} passes.
 
 2. **Read the full diff:**
    \`\`\`bash
@@ -231,7 +232,7 @@ Perform a self-review. This step is anchored on external signals (CI, the rubric
    - **Sibling renames:** every renamed identifier in a parallel pair/series has its siblings renamed in the same commit (Phase 3 rule).
    - **Docs:** every row in the Phase 7 documentation sources-of-truth table reflects the new behavior.
    - **Issue resolution:** every `Closes #N` issue's named surface area is actually changed; no issue is partially resolved while claiming closure.
-   - **CI:** all required status checks pass on the PR head SHA (re-confirms step 1).
+   - **{{EXTERNAL_SIGNAL_LABEL}}:** the external anchor is green on the PR head (re-confirms step 1).
    {{#if SELF_REVIEW_RUBRIC}}
 
    Repo-specific rubric items:
@@ -258,7 +259,7 @@ Perform a self-review. This step is anchored on external signals (CI, the rubric
    \`\`\`
    Use the actual file line number for `line` (read the source, do not guess from diff position). Use `"side": "RIGHT"` for added or changed lines. Omit `comments` entirely if every rubric item passed after fixes and there are no judgment calls to flag.
 
-6. **Cap: one intrinsic-critique pass per PR.** After Phase 6 addresses the rubric's inline comments, do not re-run the rubric internally. Only an external signal — a new reviewer comment or a CI failure — should re-open the iteration loop. Empirical findings (RESEARCH.md §5) show repeated intrinsic critique plateaus by iteration 2 and can regress.
+6. **Cap: one intrinsic-critique pass per PR.** After Phase 6 addresses the rubric's inline comments, do not re-run the rubric internally. Only an external signal — a new reviewer comment or a {{EXTERNAL_SIGNAL_LABEL}} failure — should re-open the iteration loop. Empirical findings (RESEARCH.md §5) show repeated intrinsic critique plateaus by iteration 2 and can regress.
 
 7. Proceed to Phase 5 — address your own comments in Phase 6.
 
@@ -279,7 +280,7 @@ After 5 wakeups (~22 min) with no review, proceed anyway.
 
 ### Phase 6 — Address comments
 
-**External vs. internal signals.** Comments from a real reviewer and CI failures are *external* signals — keep iterating on them until each is resolved. The self-review rubric posted in Phase 4 is *internal* — once its comments are addressed here, do not re-run the rubric. Per RESEARCH.md §1 and §5, repeated intrinsic critique without an external signal is neutral-to-harmful.
+**External vs. internal signals.** Comments from a real reviewer and {{EXTERNAL_SIGNAL_LABEL}} failures are *external* signals — keep iterating on them until each is resolved. The self-review rubric posted in Phase 4 is *internal* — once its comments are addressed here, do not re-run the rubric. Per RESEARCH.md §1 and §5, repeated intrinsic critique without an external signal is neutral-to-harmful.
 
 For each comment:
 1. Read the comment. Read the referenced source before changing anything.
@@ -368,7 +369,7 @@ Return to Phase 1.
 
 **Tests fail during implementation:** diagnose; never skip or use `--no-verify`.
 **Tests fail after addressing a comment:** same rule.
-**CI fails on the PR (Phase 4 or later):** treat the failing check as the highest-priority external signal — fix the underlying cause locally, push, and re-poll `gh pr checks --watch` before continuing the rubric or addressing other comments. Do not start or re-run the self-review rubric while CI is red.
+**{{EXTERNAL_SIGNAL_LABEL}} fails on the PR (Phase 4 or later):** treat the failing anchor as the highest-priority external signal — fix the underlying cause locally, push, and re-confirm before continuing the rubric or addressing other comments. Do not start or re-run the self-review rubric while {{EXTERNAL_SIGNAL_LABEL}} is failing.
 **A test fails intermittently (suspected flake):** re-run the test command once. If the same test fails again, treat it as a real failure and investigate. If it passes on the second run, note the flake in the PR body and proceed — do not suppress or `@Ignore` a test without understanding why it is flaky.
 **A review comment is a false positive:** reply with evidence, do not apply the change.
 {{#if REVIEWER}}**Reviewer addition fails:** proceed to the self-review step in Phase 4. Do not skip to Phase 5 without posting self-review comments — Phase 6 addresses those comments like any other review.{{/if}}
@@ -406,6 +407,8 @@ Use findings from Step 2 to substitute each `{{placeholder}}`. The table below c
 | `COMPILE_CMD` | Fastest command that catches syntax/import errors without running tests. For Maven: `MVN=$([ -f ./mvnw ] && echo ./mvnw \|\| echo mvn) && $MVN compile` |
 | `TEST_CMD` | Full test suite command from CI workflow or README. For Maven: `$MVN test` (reuse the `MVN` variable set above) |
 | `LINT_CMD` | Linter/formatter command if present in CI; omit section if absent |
+| `EXTERNAL_SIGNAL_LABEL` | Short label for the anchor used in Phase 4 self-review. `CI` when the repo has CI workflows; `manual validation` when the project uses a fixture or test-command checklist (e.g. a doc-only repo); otherwise a project-specific phrase like `snapshot regression suite`. |
+| `EXTERNAL_SIGNAL_CMD` | The command or step list that produces the anchor signal, rendered as a fenced code block indented 3 spaces so it nests under the Phase 4 step 1 list item. For CI: a bash fence containing `gh pr checks <number> --watch`. For manual validation: a numbered checklist of validation steps wrapped in a fence (or written as a plain indented checklist). Whichever form is used, the entire substituted block must keep the 3-space indent on every line. |
 | `REVIEWER` | Primary reviewer from CODEOWNERS or recent PRs; `Copilot` if configured |
 | `SCAN_CHECKLIST` | Repo-specific anti-patterns found in CLAUDE.md + common ones for the language |
 | `CODE_PATTERNS` | Bullet list from CLAUDE.md; omit section if no CLAUDE.md |
