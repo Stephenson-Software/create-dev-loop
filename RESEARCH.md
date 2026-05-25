@@ -190,6 +190,7 @@ Last reviewed: 2026-05-25.
 
 **Implementations.**
 - PR #33 (Template-version header for drift detection): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds `<!-- template-version: SHA -->` and `<!-- generated-at: ISO-timestamp -->` HTML comments to the top of every newly generated skill, plus `{{TEMPLATE_VERSION}}` and `{{GENERATED_AT}}` rows to the Step 4 substitution table. Implements the second bullet of this finding's implications; the periodic regression-check (third bullet) is a separate future change. The drift-detection step in `cdl-dev-loop` Phase 9 is also deferred — it belongs in the cdl-dev-loop repo, not here.
+- PR #35 (Update mode — re-derive existing skills from current template): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds an `update` mode to `/create-dev-loop` so the retrofit work that CLAUDE.md's promotion checklist currently mandates can be driven by the skill itself rather than by hand. Complements PR #33's drift detection — #33 detects drift; PR #35 is the remediation channel.
 
 ---
 
