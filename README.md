@@ -57,6 +57,7 @@ Each generated `<slug>-dev-loop` skill encodes:
 - **Documentation sources** — every doc file that can drift from the implementation
 - **Scan checklist** — repo-specific anti-patterns from `CLAUDE.md` plus universal ones
 - **Code patterns** — conventions from `CLAUDE.md` encoded directly into Phase 3
+- **Do-not-auto-merge paths** — files that require human review before merge (e.g. `plugin.yml`, `pom.xml`), in addition to universal entries like `.github/workflows/*`
 
 ## Related skills
 
