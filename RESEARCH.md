@@ -110,6 +110,7 @@ Last reviewed: 2026-05-25.
 
 **Implementations.**
 - PR #26 (Promote 'verify each Closes #N' to template Phase 4): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Narrow application of "re-state scope at boundaries" — verifies issue numbers against actual issue content before push, countering stale-context anchoring.
+- PR #32 (Context hygiene at phase boundaries): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds compressed plan/implementation/cycle summaries at the Phase 2 → 3, Phase 3 → 4, and Phase 8 → 9 boundaries, plus an abort-budget edge case (~500 tool calls or ~200k tokens) with a gap-issue template. Implements the second and third bullets of this finding's implications.
 
 ---
 

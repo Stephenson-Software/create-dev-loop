@@ -165,6 +165,14 @@ Include `Closes #N` in the PR body for each resolved issue so GitHub auto-closes
 git checkout -b {{BRANCH_PREFIX}}/<short-description>
 \`\`\`
 
+**Plan summary (re-read at the start of Phase 3).** Before exiting Phase 2, write a compressed plan in this shape:
+- **Issues in scope:** `#N`, `#M`, ...
+- **Branch:** `{{BRANCH_PREFIX}}/<name>`
+- **Files I expect to modify:** path, path, ...
+- **Invariants to preserve:** tests pass, no new placeholders without table rows, no fenced code blocks unescaped, etc. (project-specific invariants from CLAUDE.md)
+
+Phase 3 begins by re-reading this summary. The point is to ground the implementation in a tight statement rather than the full accumulated triage transcript — per RESEARCH.md §4, context rot degrades performance even when the window isn't full.
+
 ---
 
 ### Phase 3 — Implementation
@@ -202,6 +210,12 @@ Fix all failures before proceeding. Never skip tests or bypass hooks.
 git diff --stat origin/{{DEFAULT_BRANCH}}
 \`\`\`
 If the diff exceeds **~400 net LOC** or modifies more than **~10 files**, stop and rescope: either drop one of the batched issues from the PR, or split the remaining work into a follow-up PR. Hard stop at **~800 LOC** or **~20 files** — at that size, agent PRs fail to merge at substantially higher rates (RESEARCH.md §2).
+
+**Implementation summary (re-read at the start of Phase 4).** Before pushing, write a compressed implementation summary:
+- **Files actually modified:** path, path, ...
+- **Commit summary:** one line per commit
+- **Test/validation result:** PASS / FAIL — name the command that produced the verdict
+- **Open carryovers:** anything in scope that wasn't done and why (becomes input for Phase 9)
 
 ---
 
@@ -369,6 +383,12 @@ gh issue close <number> --comment "Resolved in PR #<n>."
 
 **Proceed to Phase 9.** Do not stop here — the self-audit is mandatory whether or not anything was implemented.
 
+**Cycle summary (re-read at the start of Phase 9).** After merging, write a compressed cycle summary:
+- **Issues closed:** `#N`, `#M`
+- **PR(s) merged:** `#X`
+- **Surprises:** anything that didn't go as expected (anchor for the self-audit's reflection prompts)
+- **Followups filed:** any new issues filed mid-cycle and where
+
 ---
 
 ### Phase 9 — Self-audit
@@ -426,6 +446,14 @@ git checkout {{DEFAULT_BRANCH}}
 git push origin --delete {{BRANCH_PREFIX}}/<name>
 \`\`\`
 **Two issues conflict mid-implementation:** finish the further-along one; file a note on the other.
+**Cycle exceeds abort budget:** if the cycle's tool calls exceed ~500 or accumulated context exceeds ~200k tokens without converging, abort rather than push through. The half-life model (RESEARCH.md §4) predicts persistence past a budget is strictly worse than restart with fresh context. Steps:
+1. Mark the in-flight PR `Draft` (`gh pr ready --undo <number>`) or, if no PR is open, push the branch with a `WIP:` commit so work isn't lost.
+2. File a gap issue on `dmccoystephenson/<slug>-dev-loop` with title `Abort budget exceeded on <branch>` and body containing:
+   - **Issues in scope:** the `#N`s the cycle was trying to close
+   - **Files modified so far:** path list
+   - **Where convergence stalled:** the last phase reached and what was blocking it
+   - **Suggested next attempt:** what to try differently on the next run
+3. Exit. Do not return to Phase 1 in the same context — restart in a fresh session.
 **No issues and no improvements found:** report what was checked; end the loop.
 ```
 
