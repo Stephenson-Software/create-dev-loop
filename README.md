@@ -62,3 +62,7 @@ Each generated `<slug>-dev-loop` skill encodes:
 
 - `dpm-dev-loop` — the reference implementation this skill is modeled on
 - `herald-dev-loop` — another example of a repo-specific generated loop
+
+## Research basis
+
+Design decisions for this project are grounded in empirical research on autonomous coding agents — PR-size effects on agent success, self-critique failure modes, context rot in long-horizon runs, and related findings. See [`RESEARCH.md`](RESEARCH.md) for citations and the implications for each phase.
