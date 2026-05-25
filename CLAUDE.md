@@ -32,6 +32,7 @@ When proposing a change to `create-dev-loop.md`, the generated template, or a ph
 - If no finding applies, say so explicitly — honest "we don't know" beats false confidence.
 - If new research surfaces that affects the project, add the finding to `RESEARCH.md` as part of the same PR (or a precursor one). Include citation, key numbers, confidence level, and the implication for this project.
 - If a finding turns out to be superseded or contradicted, update it in place — don't silently leave stale claims.
+- If your PR implements a finding from `RESEARCH.md`, also add (or update) an **Implementations** entry under that finding with the PR number, the date shipped, and an observed-effect placeholder. See `RESEARCH.md` "How to use this document" for the entry format.
 
 ## Testing changes
 
