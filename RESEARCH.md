@@ -84,6 +84,9 @@ Last reviewed: 2026-05-25.
 - Add explicit localization verification before edit: require the agent to enumerate target files and confirm they contain the named surface area from the issue before writing changes.
 - Add a regression check before merge: require a new or updated test for any bug-fix issue, not just "existing tests pass."
 
+**Implementations.**
+- PR #31 (Localization + regression gates): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds a Phase 3 \"Localization verification\" step (enumerate files, `test -f`, grep for the named surface area) and a Phase 8 regression gate (bug-fix `Closes #N` requires a new/modified test or validation step). Generalized to projects whose external anchor is manual validation rather than tests.
+
 ---
 
 ### 4. Long-horizon agent runs decay exponentially; context rot is the practical limit
