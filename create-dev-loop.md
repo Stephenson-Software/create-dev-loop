@@ -140,6 +140,8 @@ Scan for improvements not yet tracked:
 - Title accurately describes what the body says
 - Every claim in the body still holds after re-reading the source
 
+**Record skip reasons.** Any open issue that exists at triage time but is not picked for this cycle's work must have its skip reason recorded — either in the PR body of whatever this cycle does pick, or as a comment on the skipped issue. The point is auditability: a human (or a later self-audit) can see which issues were intentionally deferred and why, rather than reading silence as a value judgment. Per RESEARCH.md §7, LLM-based issue triage is a useful first-pass filter but not a final decision — surfacing the filter's reasoning preserves human oversight.
+
 ---
 
 ### Phase 2 — Work selection
@@ -152,6 +154,10 @@ Choose 0–3 issues to implement as a coherent PR:
 - **3** only when all three are small and clearly independent.
 
 When issues have a dependency relationship, implement the foundation first.
+
+**Tiebreaker rule.** When choosing between issues of comparable scope and no dependency relationship, bias toward (in descending preference): documentation fixes → CI/build fixes → small refactors → bug fixes → performance work. Per RESEARCH.md §2, autonomous-agent PRs merge at substantially higher rates for the earlier categories. This is a soft tiebreaker, not a hard exclusion — a clearly-scoped bug fix is still better than no progress, and coherent-batch grouping still takes precedence when it applies.
+
+**Early-cycle bias.** For the first 3–5 cycles after a new dev-loop skill is generated for a repo, weight the tiebreaker more strongly toward documentation and build fixes — the agent has minimal prior context for harder work. Once the loop has shipped several cycles successfully, the bias relaxes. This is a preference, not a rule; an explicit user instruction overrides it.
 
 Include `Closes #N` in the PR body for each resolved issue so GitHub auto-closes on merge.
 
