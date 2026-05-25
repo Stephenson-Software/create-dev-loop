@@ -7,6 +7,12 @@ This document records the empirical findings that inform the design of `create-d
 - **When proposing a change** to `create-dev-loop.md`, the generated skill template, or a phase definition: cite the relevant finding(s) below in the PR description. If no finding applies, say so explicitly rather than acting on intuition.
 - **When new research surfaces** that affects the project's design, add a finding here. Include the citation, key numbers, confidence level, and the specific implication for this project.
 - **When a finding is superseded** by stronger evidence or contradicted by replication, update it in place — don't silently leave stale claims. Strike-through or "Superseded by:" notes are preferred over deletion when the change in understanding is itself informative.
+- **When a finding gets implemented**, add an entry under that finding's **Implementations** subsection recording the PR number, the date shipped, and an observed-effect placeholder. The format is:
+  ```
+  **Implementations.**
+  - PR #N (one-line summary): shipped YYYY-MM-DD. Observed effect: pending — needs N cycles of data.
+  ```
+  After a few cycles of running the loop, return and replace "pending" with the actual observation (rate of caught issues, false positives, regressions). The point is to close the loop between research-grounded predictions and what we actually see.
 - **First-party sources** (Anthropic, OpenAI, vendor research with numbers) count as evidence but must be flagged as first-party so readers can weight them appropriately.
 - **Confidence levels**: `high` = replicated across multiple independent studies; `medium` = one well-cited study, plausible; `low` = single paper, contested, or inferred from adjacent literature.
 
@@ -34,6 +40,9 @@ Last reviewed: 2026-05-25.
 - Replace free-form review with an objective yes/no rubric ("Does the diff modify any file outside the issue scope?") rather than quality judgments ("Is this good code?").
 - Frame the review adversarially ("Find one bug a reviewer will flag") to partially counter sycophancy and self-preference bias.
 - Consider performing self-review in a fresh context so the agent doesn't anchor on its own reasoning trace.
+
+**Implementations.**
+- PR #15 (Reframe self-review as rubric-based and CI-grounded): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. First applied to PR #26 (one cycle, all rubric items PASS); too early to tell whether the rubric catches real defects that free-form review would miss.
 
 ---
 
@@ -92,6 +101,9 @@ Last reviewed: 2026-05-25.
 - Set an abort-and-file-gap-issue budget (tool calls or token count). If the loop hasn't converged by then, restart with fresh context rather than push through; the half-life model predicts persistence past a budget is strictly worse.
 - The "agentic-level" failures from finding #2 (license violations, instruction misalignment) reinforce the need to re-state scope rules at each phase, not only once at the top.
 
+**Implementations.**
+- PR #26 (Promote 'verify each Closes #N' to template Phase 4): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Narrow application of "re-state scope at boundaries" — verifies issue numbers against actual issue content before push, countering stale-context anchoring.
+
 ---
 
 ### 5. Reflection iterations plateau early; more is not better
@@ -108,6 +120,9 @@ Last reviewed: 2026-05-25.
 **Implication for create-dev-loop.**
 - Cap the self-review → fix → self-review cycle at 2 iterations unless the trigger is an external signal (CI failure, reviewer comment).
 - Distinguish *external* comments (good iteration signal — keep iterating until resolved) from *internal* self-critique (cap iterations, no re-critique loops).
+
+**Implementations.**
+- PR #15 (Reframe self-review as rubric-based and CI-grounded): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds the explicit "one intrinsic-critique pass per PR" cap and the external-vs-internal-signal distinction to the template's Phase 4 and Phase 6.
 
 ---
 
