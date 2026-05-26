@@ -12,6 +12,8 @@ When editing the template:
 - Keep phase numbers stable — generated skills reference them by number in edge-case instructions
 - Every `{{placeholder}}` in the template must have a corresponding row in the Step 4 substitution table
 - Fenced code blocks inside the template are escaped with a leading backslash on the triple-backtick (` \`\`\` `) so they survive being embedded inside the outer markdown code block in `create-dev-loop.md`
+- README "What it does" must enumerate every Step. When a new Step is added or removed, update the README in the same PR. The two are required to stay 1:1.
+- Every generated skill carries `<!-- template-version: <sha> -->` and `<!-- generated-at: <iso8601> -->` HTML comments at the top of the file. Don't drop the convention when adding template features; cosmetic display side-effect is tracked in #36.
 
 ## What belongs here vs. in generated skills
 
@@ -40,6 +42,8 @@ There is no automated test suite. Validate changes by running `/create-dev-loop`
 1. The generated skill file compiles (no unresolved `{{placeholders}}` remain)
 2. The slash command link resolves correctly
 3. The reported summary accurately reflects the target repo
+4. The `<!-- template-version: <sha> -->` and `<!-- generated-at: <iso8601> -->` HTML comments appear at the top of the generated skill, with the SHA matching the create-dev-loop commit you generated from
+5. If the target repo already has a skill, exercise `MODE=update` end-to-end: confirm the abort-on-uncommitted-changes check, the pre-overwrite diff prompt, and that Steps 6–7 are correctly skipped
 
 Use `a-private-repo-1` or `a-private-repo-2` as reference implementations when evaluating whether a generated skill looks correct.
 
