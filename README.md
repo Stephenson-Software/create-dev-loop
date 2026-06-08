@@ -72,3 +72,10 @@ Each generated `<slug>-dev-loop` skill encodes:
 ## Research basis
 
 Design decisions for this project are grounded in empirical research on autonomous coding agents — PR-size effects on agent success, self-critique failure modes, context rot in long-horizon runs, and related findings. See [`RESEARCH.md`](RESEARCH.md) for citations and the implications for each phase.
+
+## License
+
+This project is licensed under the **Stephenson Software Non-Commercial License (Stephenson-NC)**.
+
+**License:** Stephenson-NC © 2025 Daniel McCoy Stephenson  
+See [LICENSE.md](./LICENSE.md) for the full legal text, or the canonical repository at <https://github.com/Stephenson-Software/stephenson-nc-license> for details and commercial-licensing inquiries.
