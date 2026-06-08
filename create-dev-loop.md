@@ -182,12 +182,31 @@ When issues have a dependency relationship, implement the foundation first.
 
 Include `Closes #N` in the PR body for each resolved issue so GitHub auto-closes on merge.
 
+**Alternative cycle work modes.** Implementing issues is the default unit of work, but a cycle may instead be devoted to one of the two stages below. Both are **first-class outcomes** (not filler) and produce a normal PR through Phases 4–8. Prefer them when the open-issue backlog is thin, blocked, or all human-gated — a cycle that tightens the docs or hardens the test suite is real progress. They also rank high on the tiebreaker (documentation review sits with "documentation fixes"; test expansion just below it; see RESEARCH.md §2), so favor them over speculative feature work.
+
+#### Stage A — Documentation accuracy review (sweep)
+
+Sweep the documentation for drift against the *actual source*, independent of any recent change — the proactive, repo-wide complement to the PR-scoped check in Phase 7. Go through every documentation source of truth (the Phase 7 table) and verify each claim against the code, config, or commands it documents. **Verify against source, never memory.**
+
+- Fix drift **in the docs**. If the *code* is what's wrong (the docs describe the intended, correct behavior), do **not** silently change code under a docs cycle — file an issue and leave it for an implementation cycle.
+- Respect the Phase 3 scope ceiling. If drift is large, fix the highest-value subset this cycle and file an issue enumerating the rest.
+- If a complete sweep finds **no** drift, say so explicitly and fall back to another work mode — an empty docs PR is not an outcome.
+
+#### Stage B — Unit-test expansion (functionality confidence)
+
+Add tests to under-covered, behavior-bearing code to lock in current correct behavior and create regression guards (RESEARCH.md §3). The goal is **confidence**, not a coverage percentage. If the project has no automated test suite, this stage does not apply — pick another work mode.
+
+- Target, in order of preference: core/domain logic with **no** existing test, then entry points (command/handler/controller classes) whose logic is untested, then the remaining behavior-bearing code. Find candidates by comparing the source tree against the existing test files and looking for behavior-bearing units with no mirror.
+- Follow the test framework, location, and mocking conventions already established in Phase 3 and in sibling tests (read 2–3 neighbors first). **No real network or database calls** — mock collaborators. Where logic runs inside a scheduled or async callback, capture and invoke that callback so the real logic is exercised, rather than only asserting it was scheduled.
+- **Characterization, not change.** These tests must assert the code's *current* behavior. If writing one reveals an apparent bug, do **not** change production code under a test-expansion cycle — document the current behavior (or mark the test skipped with a reason), file a bug issue, and leave the fix to a separate cycle. Never weaken an existing assertion to make a new test pass.
+- Scope one cohesive class/area per cycle, within the Phase 3 scope ceiling.
+
 \`\`\`bash
 git checkout -b {{BRANCH_PREFIX}}/<short-description>
 \`\`\`
 
 **Plan summary (re-read at the start of Phase 3).** Before exiting Phase 2, write a compressed plan in this shape:
-- **Issues in scope:** `#N`, `#M`, ...
+- **Work in scope:** the issues (`#N`, `#M`, …), or `Stage A — documentation accuracy sweep`, or `Stage B — unit-test expansion (<target class/area>)`.
 - **Branch:** `{{BRANCH_PREFIX}}/<name>`
 - **Files I expect to modify:** path, path, ...
 - **Invariants to preserve:** tests pass, no new placeholders without table rows, no fenced code blocks unescaped, etc. (project-specific invariants from CLAUDE.md)
@@ -214,7 +233,7 @@ Universal rules:
 - **Match sibling structure.** Before creating a new file in a directory, read the section headers / structure of every existing file in the same directory and conform to the established pattern. Example: `grep "^##" path/to/dir/*.md` for docs, or read 2–3 neighboring source files for code.
 - **Rename siblings together.** When renaming a heading or identifier that is part of a parallel pair or series (e.g. `Required X` / `Optional X`, `loadConfig` / `saveConfig`), scan for the siblings and rename them in the same commit.
 
-Write or update tests for every change:
+Write or update tests for every change (and see Stage B in Phase 2 when the *whole cycle* is dedicated to expanding coverage of existing functionality):
 {{TEST_GUIDANCE}}
 
 Verify the build is clean:
@@ -359,6 +378,8 @@ Run `{{TEST_CMD}}` after every fix. Do not push a broken build.
 ---
 
 ### Phase 7 — Documentation accuracy check
+
+This phase is **PR-scoped**: it verifies the docs against *this PR's* implementation. The proactive, repo-wide version (drift unrelated to the current change) is a selectable cycle work-mode — Stage A in Phase 2.
 
 **Read the implementation first**, then check each doc against it.
 
