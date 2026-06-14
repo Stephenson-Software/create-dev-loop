@@ -13,7 +13,7 @@ When editing the template:
 - Every `{{placeholder}}` in the template must have a corresponding row in the Step 4 substitution table
 - Fenced code blocks inside the template are escaped with a leading backslash on the triple-backtick (` \`\`\` `) so they survive being embedded inside the outer markdown code block in `create-dev-loop.md`
 - README "What it does" must enumerate every Step. When a new Step is added or removed, update the README in the same PR. The two are required to stay 1:1.
-- Every generated skill carries `<!-- template-version: <sha> -->` and `<!-- generated-at: <iso8601> -->` HTML comments at the top of the file. Don't drop the convention when adding template features; cosmetic display side-effect is tracked in #36.
+- Every generated skill carries `<!-- template-version: <sha> -->` and `<!-- generated-at: <iso8601> -->` HTML comments placed **directly below the `# <slug>-dev-loop` H1 heading** (not above it). Keep them below the heading so commands-format installs show the description, not the comment, as the skill-list line (the fix for #36). Don't drop the convention when adding template features.
 
 ## What belongs here vs. in generated skills
 

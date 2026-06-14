@@ -107,16 +107,16 @@ Compile findings into these answers before writing the skill:
 Create `~/local-skills/<slug>-dev-loop/<slug>-dev-loop.md` using the template below, substituting all `{{placeholders}}` with findings from Step 2. Remove any section that does not apply (e.g. no changelog → remove changelog row from doc check table).
 
 ```markdown
+# <slug>-dev-loop
+
 <!-- template-version: {{TEMPLATE_VERSION}} -->
 <!-- generated-at: {{GENERATED_AT}} -->
-
-# <slug>-dev-loop
 
 Autonomous iterative development loop for {{PROJECT_NAME}}.
 
 **Identity:** the kind of skill that {{IDENTITY}}.
 
-**Working directory:** {{REPO_ROOT}}
+**Working directory:** {{REPO_ROOT}} (resolved at runtime — see Phase 1; do not assume this literal path exists)
 **Project repo:** {{GITHUB_OWNER}}/{{GITHUB_REPO}}
 **Skill repo:** dmccoystephenson/<slug>-dev-loop (issues for self-audit findings go here)
 {{#if CLAUDE_MD}}**Project guidance:** read `CLAUDE.md` at the start of each cycle if context is cold.{{/if}}
@@ -129,8 +129,26 @@ Autonomous iterative development loop for {{PROJECT_NAME}}.
 
 ### Phase 1 — Triage
 
+**Resolve the working tree before `cd`** — never assume a hardcoded absolute path exists on every machine/container (the first action of the cycle must not fail because the configured path is absent). Resolution order: explicit env var → configured path → a detected clean clone → fresh clone.
+
 \`\`\`bash
-cd {{REPO_ROOT}}
+# Resolve REPO_ROOT: ${{REPO_ENV_VAR}} if set & present > the configured path > a clean clone whose
+# origin matches {{GITHUB_OWNER}}/{{GITHUB_REPO}} (prefer no uncommitted changes; skip /mnt/ user copies) > fresh clone.
+if [ -n "${{REPO_ENV_VAR}}" ] && [ -d "${{REPO_ENV_VAR}}" ]; then
+  REPO_ROOT="${{REPO_ENV_VAR}}"
+elif [ -d "{{REPO_ROOT}}" ]; then
+  REPO_ROOT="{{REPO_ROOT}}"
+else
+  REPO_ROOT=""
+  for d in ~/local-skills/* ~/* ~/*/*; do
+    [ -d "$d/.git" ] || continue
+    case "$d" in /mnt/*) continue;; esac
+    git -C "$d" remote get-url origin 2>/dev/null | grep -q "{{GITHUB_OWNER}}/{{GITHUB_REPO}}" || continue
+    REPO_ROOT="$d"; [ -z "$(git -C "$d" status --porcelain)" ] && break
+  done
+  [ -z "$REPO_ROOT" ] && { REPO_ROOT="$HOME/{{GITHUB_REPO}}"; git clone https://github.com/{{GITHUB_OWNER}}/{{GITHUB_REPO}}.git "$REPO_ROOT"; }
+fi
+cd "$REPO_ROOT"
 git checkout {{DEFAULT_BRANCH}} && git pull
 gh pr list --state open
 gh issue list --state open
@@ -138,8 +156,9 @@ git log --oneline -10
 \`\`\`
 
 **Check for open PRs from previous cycles first.** If any open PR exists, decide before doing anything else:
-- If the PR is still valid (tests green, no conflicts), jump to Phase 5 to re-poll for review.
+- If the PR is still valid (tests green, no conflicts), **first confirm a Phase 4 self-review was actually posted** (a carried-over PR from a prior cycle may never have completed it). If none is recorded, perform the Phase 4 self-review now (CI must be green first) before jumping to Phase 5. Otherwise jump to Phase 5 to re-poll for review.
 - If the PR is stale or conflicted, close it with a comment explaining why, then proceed with triage.
+- **If the open PR was authored by a concurrent session/another author** (not this loop), do not misread "don't open a new PR" as "do nothing": adopt it — bring it current with `{{DEFAULT_BRANCH}}`, re-run full {{EXTERNAL_SIGNAL_LABEL}}, review, and merge if green (or close it with a reason). Under a `git worktree` workflow the main checkout stays on `{{DEFAULT_BRANCH}}` to avoid colliding with the other session's tree.
 
 Do not open a new PR while one is already open against the same repo.
 
@@ -161,7 +180,9 @@ Scan for improvements not yet tracked:
 - Title accurately describes what the body says
 - Every claim in the body still holds after re-reading the source
 
-**Record skip reasons.** Any open issue that exists at triage time but is not picked for this cycle's work must have its skip reason recorded — either in the PR body of whatever this cycle does pick, or as a comment on the skipped issue. The point is auditability: a human (or a later self-audit) can see which issues were intentionally deferred and why, rather than reading silence as a value judgment. Per RESEARCH.md §7, LLM-based issue triage is a useful first-pass filter but not a final decision — surfacing the filter's reasoning preserves human oversight.
+**Classify harness-blocked operations up front.** Before selecting work, flag any issue whose fix requires an operation the harness/auto-mode classifier denies — so it is recognized at triage rather than failing mid-implementation. In particular, **editing agent-loaded config (`CLAUDE.md`) and registering/initializing an external submodule (`git submodule add` from another org) require explicit, separate user authorization** — surface such issues to the user instead of attempting them. Never remove a path while `CLAUDE.md` still references it (that creates the very doc drift Phase 7 guards against). Treat these like the data-volume rule: a known up-front classification, not a mid-cycle surprise.
+
+**Record skip reasons.** Any open issue that exists at triage time but is not picked for this cycle's work must have its skip reason recorded — either in the PR body of whatever this cycle does pick, or as a comment on the skipped issue. The point is auditability: a human (or a later self-audit) can see which issues were intentionally deferred and why, rather than reading silence as a value judgment. Per RESEARCH.md §7, LLM-based issue triage is a useful first-pass filter but not a final decision — surfacing the filter's reasoning preserves human oversight. **Exception — externally-directed cycles** (`/<loop> on <PR/issue/target>`): the entire untouched backlog is deferred for one self-evident reason (the cycle was scoped to the given target). Record that **once** in the groomed/created PR body or review — do **not** mass-comment skip reasons on unrelated issues (that spams contributors).
 
 ---
 
@@ -245,11 +266,15 @@ Verify the build is clean:
 
 Fix all failures before proceeding. Never skip tests or bypass hooks.
 
+**Formatting is scoped to changed files.** Run any formatter against **only the files you changed** (e.g. `black <changed files>` / `autoflake --in-place <changed files>`), not a tree-wide script — a whole-repo reformat pulls unrelated files into the PR and violates the Scope rule below. If you do run a tree-wide formatter, only `git add` files in this PR's scope and `git checkout --` any unrelated files it touched. Pre-existing formatting drift lands as its own formatting-only sweep, never smuggled into a feature/fix PR. (Such scripts may not be executable in the checkout — invoke as `bash format.sh`.)
+
+**Git-staging hygiene.** Stage by name — **never** `git add -A` or `git add .`. The harness writes `.claude/` state (e.g. `scheduled_tasks.lock`) into the tree while the loop runs, and the project `.gitignore` may not cover it; a blanket add leaks harness state into the project repo (and the classifier blocks the `git rm --cached` cleanup as scope-escalation). After staging, run `git status` and confirm no `.claude/` entries are staged before committing.
+
 **Scope ceiling.** Before pushing, check the cumulative net diff for this cycle:
 \`\`\`bash
 git diff --stat origin/{{DEFAULT_BRANCH}}
 \`\`\`
-If the diff exceeds **~400 net LOC** or modifies more than **~10 files**, stop and rescope: either drop one of the batched issues from the PR, or split the remaining work into a follow-up PR. Hard stop at **~800 LOC** or **~20 files** — at that size, agent PRs fail to merge at substantially higher rates (RESEARCH.md §2).
+Count the soft ceiling against **non-test net LOC**. If non-test changes exceed **~400 net LOC** or the PR modifies more than **~10 files**, stop and rescope: either drop one of the batched issues from the PR, or split the remaining work into a follow-up PR. **Exception:** if you are over the soft ceiling *only* because of (a) test code or (b) a dependency-coupled issue that cannot be split without leaving an unused component (e.g. an endpoint that requires its own hashing service), proceed but state the overage and the reason in the PR body and self-review. Hard stop unchanged at **~800 LOC** or **~20 files** — at that size, agent PRs fail to merge at substantially higher rates (RESEARCH.md §2).
 
 **Implementation summary (re-read at the start of Phase 4).** Before pushing, write a compressed implementation summary:
 - **Files actually modified:** path, path, ...
@@ -290,6 +315,10 @@ Perform a self-review. This step is anchored on external signals ({{EXTERNAL_SIG
 
    If it fails, fix the underlying issue, push, and re-confirm. Do not start the rubric until {{EXTERNAL_SIGNAL_LABEL}} passes.
 
+   **If the anchor cannot run** because the tool/interpreter is absent or broken in the environment (docker not installed; bare `python` resolving to 2.7; a venv-less interpreter with no pytest; `./gradlew` dying on a sandbox file-lock), do **not** claim it green and do **not** burn the cycle trying to fix the sandbox. Flag it **UNVERIFIED** and gate on scope: if the PR modifies files the anchor would have validated, the anchor is required — mark UNVERIFIED, do not auto-merge, and hand to CI/a human with the tool (prefer the CI check on the exact PR head SHA as the real anchor where local execution is blocked). If the PR touches none of those files (e.g. docs-only), record UNVERIFIED-not-applicable and continue, stating it in the self-review and PR body. Capability-check any named interpreter before relying on it (e.g. `<py> -c "import pytest"`) and prefer the project's own venv.
+
+   **Green CI is not verification when CI's scope excludes the changed files.** If this PR changes code the CI structurally cannot execute (platform-specific scripts — `.ps1`/`.bat`/`.command`, installer configs, OS-gated shell paths), a green run does **not** verify those files. State the no-automated-coverage gap in the PR body (and CHANGELOG), lean harder on adversarial hand-review of that code, and recommend a real-platform smoke test before merge — never let a green run on the *other* language imply the script was tested.
+
 2. **Read the full diff:**
    \`\`\`bash
    gh pr diff <number>
@@ -300,7 +329,7 @@ Perform a self-review. This step is anchored on external signals ({{EXTERNAL_SIG
    Universal rubric:
    - **Scope:** every file modified is necessary for one of the issues in `Closes #N` (no unrelated formatting, renames, or comment churn).
    - **Tests-new:** every new public method/function has at least one test that exercises it.
-   - **Tests-fix:** for each bug fix, a test exists that would fail without the fix.
+   - **Tests-fix (empirical, not judged):** for each bug fix, temporarily revert the fix (`git stash push -- <src files>`), run the new/changed tests and confirm they **FAIL**, then `git stash pop` and confirm they **PASS**. A regression test that still passes with the fix stashed is a false-negative (common when the "after" state is indistinguishable from the "before") — use distinct/sentinel data so the failure is observable. Do not score this from reasoning alone.
    - **Sibling structure:** every new file matches the section/structure conventions of its directory siblings (Phase 3 rule).
    - **Sibling renames:** every renamed identifier in a parallel pair/series has its siblings renamed in the same commit (Phase 3 rule).
    - **Docs:** every row in the Phase 7 documentation sources-of-truth table reflects the new behavior.
@@ -316,21 +345,20 @@ Perform a self-review. This step is anchored on external signals ({{EXTERNAL_SIG
    - If the fix is mechanical and small, fix it locally, commit, push, and re-score the failed item. Do not re-score items that previously passed.
    - If the item requires judgment (e.g. "is this scope creep?"), leave it as an inline review comment for Phase 6.
 
-5. **Post the self-review** with the rubric outcomes and any unresolved inline comments:
+5. **Post the self-review as a plain PR comment** — not a formal review API call. The auto-mode classifier blocks `POST /pulls/<n>/reviews` (it misrepresents independent review); a plain comment keeps the audit trail without implying reviewer independence:
    \`\`\`bash
-   gh api repos/{{GITHUB_OWNER}}/{{GITHUB_REPO}}/pulls/<number>/reviews \
-     --method POST \
-     --input - <<'JSON'
-   {
-     "body": "Self-review rubric:\n- Scope: PASS — <justification>\n- Tests-new: PASS — <justification>\n- ...\n\n<one-line summary>",
-     "event": "COMMENT",
-     "comments": [
-       { "path": "src/path/to/File.ext", "line": 42, "side": "RIGHT", "body": "Inline comment" }
-     ]
-   }
-   JSON
+   gh pr comment <number> --body "$(cat <<'EOF'
+   Self-review rubric:
+   - Scope: PASS — <justification>
+   - Tests-new: PASS — <justification>
+   - Tests-fix: PASS — stash-and-run confirmed FAIL→PASS
+   - ...
+
+   <one-line summary; fold any out-of-diff observations into this body>
+   EOF
+   )"
    \`\`\`
-   Use the actual file line number for `line` (read the source, do not guess from diff position). Use `"side": "RIGHT"` for added or changed lines. Omit `comments` entirely if every rubric item passed after fixes and there are no judgment calls to flag.
+   Reserve inline line-anchored comments for lines this PR actually adds/changes — an inline comment on a line **outside the diff hunk** is rejected (`HTTP 422: Line could not be resolved`); fold those observations into the comment **body** instead. Do not retry a 422 with a different line number. Omit inline comments entirely if every rubric item passed after fixes and there are no judgment calls to flag.
 
 6. **Cap: one intrinsic-critique pass per PR.** After Phase 6 addresses the rubric's inline comments, do not re-run the rubric internally. Only an external signal — a new reviewer comment or a {{EXTERNAL_SIGNAL_LABEL}} failure — should re-open the iteration loop. Empirical findings (RESEARCH.md §5) show repeated intrinsic critique plateaus by iteration 2 and can regress.
 
@@ -349,6 +377,8 @@ gh api repos/{{GITHUB_OWNER}}/{{GITHUB_REPO}}/pulls/<number>/comments \
 If no review yet, use `ScheduleWakeup` (delay 270 s) to check again.
 After 5 wakeups (~22 min) with no review, proceed anyway.
 
+**Autonomous multi-cycle batch mode** (`/<loop> until you run out of issues` / `do N cycles`): there is no human reviewer between back-to-back cycles, so the ~22 min poll is pure latency. Treat the self-review rubric + green {{EXTERNAL_SIGNAL_LABEL}} as the merge gate and **skip (or cap at one short poll)** this Phase-5 wait — except for do-not-auto-merge / charter-gated PRs, which still hand off for human approval. **Stop condition:** end the batch when the only remaining issues are blocked, charter-gated, or too large for a polish-sized PR, or when a cycle yields no appropriately-scoped work.
+
 ---
 
 ### Phase 6 — Address comments
@@ -361,13 +391,13 @@ For each comment:
 3. If it conflicts with CLAUDE.md, the issue spec, or a project config file,
    reply with the evidence and do not apply the change.
 
-Commit using HEREDOC so the co-author trailer is on its own line:
+Commit using HEREDOC so the trailer is on its own line. Stage by name (never `git add -A`). **Do not hardcode the co-author model name** — defer to the harness's standing git rule, which appends the *actual running model* (a hardcoded name misattributes the commit when a different model version is running):
 \`\`\`bash
 git add <files>
 git commit -m "$(cat <<'EOF'
 <fix description>
 
-Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+Co-Authored-By: <the actual running model, per the harness git instructions> <noreply@anthropic.com>
 EOF
 )"
 git push
@@ -392,7 +422,7 @@ Only proceed when a complete pass finds nothing wrong.
 
 ### Phase 8 — Merge
 
-**Regression gate.** For each issue in `Closes #N` that is a bug fix or describes incorrect behavior, verify the diff includes a new or modified test (or, for projects whose external anchor is manual validation, a new validation step) that exercises the fix. If absent, do not merge — either add the regression coverage or reclassify the issue. Per RESEARCH.md §3, regression evidence is the only way to distinguish a real fix from a coincidental patch.
+**Regression gate.** For each issue in `Closes #N` that is a bug fix or describes incorrect behavior, verify the diff includes a new or modified test (or, for projects whose external anchor is manual validation, a new validation step) that exercises the fix — and that it was confirmed empirically (the Phase 4 stash-and-run: FAIL with the fix reverted, PASS with it restored), not by reasoning alone. If absent, do not merge — either add the regression coverage or reclassify the issue. Per RESEARCH.md §3, regression evidence is the only way to distinguish a real fix from a coincidental patch.
 
 **Do-not-auto-merge path check.** Before invoking `gh pr merge`, list the files this PR modifies and check them against the do-not-auto-merge list. If any modified path matches, do not merge automatically — leave the PR open and report to the user for manual review.
 
@@ -416,6 +446,10 @@ If no modified path matches, proceed:
 gh pr merge <number> --squash --delete-branch
 git checkout {{DEFAULT_BRANCH}} && git pull
 \`\`\`
+
+**Review-ready hand-off is a valid terminal state — not a failed cycle.** On a repo with no autonomous merge path (branch-protected `{{DEFAULT_BRANCH}}` requiring an approving review, and/or repository auto-merge disabled), a clean, anchor-green PR's true terminal state is *open + self-review posted + awaiting human approval*. Expect `gh pr merge` → `the base branch policy prohibits the merge` and `--auto` → `Auto merge is not allowed for this repository`. **Never use `--admin`** to bypass a deliberately-configured human gate, and a later self-audit must not score "could not auto-merge" as a failure. A do-not-auto-merge path match blocks **autonomous** merge only: if the human codeowner explicitly authorizes the merge after being shown which protected path matched, that authorization satisfies the hold — proceed (still run the Phase 7 docs sweep + the regression gate above first), and state in the merge report which protected path was overridden and by whose authorization.
+
+**Worktree note:** under a `git worktree` workflow (main checkout kept on `{{DEFAULT_BRANCH}}`), `gh pr merge --delete-branch`'s *local* branch deletion can fail with `fatal: '{{DEFAULT_BRANCH}}' is already checked out` — the merge and remote-branch deletion still succeed. Verify the real state with `gh pr view <number> --json state` and delete the remote branch separately rather than treating the local error as a failed merge.
 
 Verify issues auto-closed. Close any that did not:
 \`\`\`bash
@@ -482,6 +516,10 @@ Return to Phase 1.
 **Tests fail during implementation:** diagnose; never skip or use `--no-verify`.
 **Tests fail after addressing a comment:** same rule.
 **{{EXTERNAL_SIGNAL_LABEL}} fails on the PR (Phase 4 or later):** treat the failing anchor as the highest-priority external signal — fix the underlying cause locally, push, and re-confirm before continuing the rubric or addressing other comments. Do not start or re-run the self-review rubric while {{EXTERNAL_SIGNAL_LABEL}} is failing.
+**The external anchor cannot run (tool/interpreter absent or broken in the sandbox):** do not claim it green and do not iterate on the sandbox. Flag **UNVERIFIED** and gate on scope (Phase 4): anchor-relevant files changed → mark UNVERIFIED + do-not-auto-merge + hand to CI/human (prefer the CI check on the exact head SHA); no anchor-relevant files (docs-only) → record UNVERIFIED-not-applicable and continue, stating it in the PR body.
+**An issue requires a harness-blocked operation (editing `CLAUDE.md`/agent-loaded config, registering an external submodule):** recognize it at triage (Phase 1) — surface to the user for explicit authorization rather than attempting it mid-cycle; never remove a path while `CLAUDE.md` still references it.
+**Autonomous multi-cycle batch (`/<loop> until …`):** skip/cap the Phase-5 human-review wait (rubric + green anchor is the gate); still hand off do-not-auto-merge/charter PRs. Stop when only blocked, charter-gated, or too-large work remains, or a cycle yields no scoped work.
+**A concurrent session holds the tree or an open PR:** adopt its PR (bring current with `{{DEFAULT_BRANCH}}`, re-run the anchor, review, merge if green) rather than doing nothing; work in a `git worktree` to avoid colliding, and treat a harmless local `--delete-branch` failure as success once `gh pr view --json state` confirms the merge.
 **A test fails intermittently (suspected flake):** re-run the test command once. If the same test fails again, treat it as a real failure and investigate. If it passes on the second run, note the flake in the PR body and proceed — do not suppress or `@Ignore` a test without understanding why it is flaky.
 **A review comment is a false positive:** reply with evidence, do not apply the change.
 {{#if REVIEWER}}**Reviewer addition fails:** proceed to the self-review step in Phase 4. Do not skip to Phase 5 without posting self-review comments — Phase 6 addresses those comments like any other review.{{/if}}
@@ -520,7 +558,8 @@ Use findings from Step 2 to substitute each `{{placeholder}}`. The table below c
 |-------------|---------------------|
 | `PROJECT_NAME` | Directory name or `name` field in build file |
 | `IDENTITY` | One sentence completing "the kind of skill that ___". Draft it from the repo's actual posture: read `CLAUDE.md`, `CONTRIBUTING.md`, and 2-3 recent PRs to infer what *this* skill is optimizing for in *this* repo. The identity must **name what the skill actively rejects** (e.g. "never lets the four sources of truth drift"), not just what it pursues. See the Identity statements section of [a-private-repo-3/CONVENTIONS.md](https://github.com/dmccoystephenson/a-private-repo-3/blob/main/CONVENTIONS.md). |
-| `REPO_ROOT` | Output of `git rev-parse --show-toplevel` |
+| `REPO_ROOT` | Output of `git rev-parse --show-toplevel`. Used as the *configured* fallback path in the Phase 1 resolution block, not as a hardcoded `cd` target. |
+| `REPO_ENV_VAR` | Name of the per-repo override env var the Phase 1 resolver checks first, derived from the repo slug: uppercase, non-alphanumerics→`_`, suffix `_DIR` (e.g. `dpm` → `DPM_DIR`, `medieval-factions` → `MEDIEVAL_FACTIONS_DIR`). Substituted bare (no braces) into `${VAR}` in the resolver. |
 | `GITHUB_OWNER/REPO` | `gh repo view --json nameWithOwner -q .nameWithOwner` |
 | `DEFAULT_BRANCH` | `gh repo view --json defaultBranchRef -q .defaultBranchRef.name` |
 | `BRANCH_PREFIX` | From CONTRIBUTING.md, or `feature` if not specified |
