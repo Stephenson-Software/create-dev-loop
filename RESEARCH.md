@@ -44,6 +44,7 @@ Last reviewed: 2026-05-25.
 **Implementations.**
 - PR #15 (Reframe self-review as rubric-based and CI-grounded): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. First applied to PR #26 (one cycle, all rubric items PASS); too early to tell whether the rubric catches real defects that free-form review would miss.
 - PR #34 (Structure Phase 9 self-audit prompts and label gap issues): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Extends the rubric-over-free-form pattern from Phase 4 (self-review) to Phase 9 (self-audit), with a 6-item structured checklist and a 5-label taxonomy for filed gap issues.
+- PR #54 (Apply consolidated template-rule backlog, #44/#46/#47): shipped 2026-06-14. Observed effect: pending — needs N cycles of data. Sharpens the external-anchor definition (#44: UNVERIFIED handling when the anchor can't run; #46: green CI is not verification when CI's scope excludes the changed files) and grounds the Tests-fix rubric item empirically (#47: stash-and-run FAIL→PASS, not scored from reasoning alone) — directly targeting the self-preference failure mode this finding's evidence documents for judgment-based rubric scoring.
 
 ---
 
@@ -65,6 +66,7 @@ Last reviewed: 2026-05-25.
 **Implementations.**
 - PR #29 (Bias triage and batching toward higher-merge-rate issue types): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds a Phase 2 tiebreaker preferring documentation → CI/build → small refactors → bug fixes → performance, with stronger weighting in early cycles. Targets the merge-rate gradient by issue type; does not yet address the LOC/files ceilings (issue #17 is the structural-gates follow-up).
 - PR #30 (Hard PR scope gates): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds a Phase 3 ~400-net-LOC / ~10-files soft ceiling (~800 / ~20 hard stop) and a Phase 8 do-not-auto-merge path check (universal entries: `.github/workflows/*`, `security/`, >50-line deletions; plus a `{{DO_NOT_AUTO_MERGE}}` placeholder for repo-specific paths). Implements the first bullet of this finding's implications.
+- PR #54 (Apply consolidated template-rule backlog, #49): shipped 2026-06-14. Observed effect: pending — needs N cycles of data. Refines the Phase 3 scope ceiling to count non-test net LOC and to permit dependency-coupled batches that can't be split without leaving an unused component, so the ceiling doesn't force an artificial rescope on PRs whose size is driven by test coverage or an inseparable dependency rather than actual scope creep.
 
 ---
 
@@ -133,6 +135,7 @@ Last reviewed: 2026-05-25.
 **Implementations.**
 - PR #15 (Reframe self-review as rubric-based and CI-grounded): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds the explicit "one intrinsic-critique pass per PR" cap and the external-vs-internal-signal distinction to the template's Phase 4 and Phase 6.
 - PR #34 (Structure Phase 9 self-audit prompts and label gap issues): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Structured rubric for the retrospective phase mirrors the Phase 4 self-review structure; same plateau-by-iteration-2 logic argues for capping retrospective re-runs at one pass.
+- PR #54 (Apply consolidated template-rule backlog, #40): shipped 2026-06-14. Observed effect: pending — needs N cycles of data. Closes a gap in the "one intrinsic-critique pass per PR" cap: a PR carried over from a prior cycle could skip Phase 4 entirely and never post a self-review, silently defeating the cap on the *next* cycle's re-check. Phase 1 triage now backfills the missing self-review before proceeding, so the cap always has exactly one intrinsic pass to anchor against.
 
 ---
 
