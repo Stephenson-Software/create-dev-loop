@@ -23,10 +23,10 @@ Running `/create-dev-loop` in any repo runs seven Steps (mapped 1:1 to Steps 1�
 
 1. **Identify** the repository — confirms a git toplevel, derives the slug, checks whether a skill already exists and (if so) asks **update** / **overwrite** / **cancel**
 2. **Explore** — reads `CLAUDE.md`, `CONTRIBUTING.md`, CI workflows, build files, linter configs, recent PRs, and `CODEOWNERS` to compile a repo-specific profile (build/test commands, branch prefix, reviewer, doc sources, code patterns)
-3. **Write** the skill file at `~/local-skills/<slug>-dev-loop/<slug>-dev-loop.md` from the template, with a `<!-- template-version: <sha> -->` HTML comment just below the heading so future cycles can detect drift against the template
+3. **Write** the skill file at `~/local-skills/<slug>-dev-loop/<slug>-dev-loop.md` from the template, with `<!-- template-version: <sha> -->` and `<!-- generated-at: <iso8601> -->` HTML comments just below the heading so future cycles can detect drift against the template
 4. **Fill in placeholders** — substitutes every `{{PLACEHOLDER}}` and `{{#if FLAG}}` token from Step 2's findings, using the Step 4 substitution table as the contract
 5. **Register** it as a slash command at `~/.claude/commands/<slug>-dev-loop.md`
-6. **Create** a private GitHub repo (`<slug>-dev-loop`) to serve as the issue tracker for self-audit findings (skipped in update mode)
+6. **Create** a private GitHub repo (`<slug>-dev-loop`) to serve as the issue tracker for self-audit findings, and seed it with the five gap-issue labels Phase 9 files against (skipped in update mode)
 7. **Record** the skill in `~/a-private-repo-3/README.md` for discoverability (skipped in update mode)
 
 The generated skill drives a 10-phase loop: triage → work selection → implementation → PR → review → address comments → doc check → merge → self-audit → repeat.
@@ -59,6 +59,7 @@ Each generated `<slug>-dev-loop` skill encodes:
 - **Branch naming** — from `CONTRIBUTING.md` or inferred from recent branches
 - **Reviewer** — from `CODEOWNERS`, recent PR reviewers, or `Copilot` if configured
 - **Lint/format step** — only if present in CI; omitted otherwise
+- **External signal anchor** — the objective check the self-review must be green against: CI where the repo has workflows, otherwise a manual-validation checklist or whatever else the project actually verifies against
 - **Documentation sources** — every doc file that can drift from the implementation
 - **Scan checklist** — repo-specific anti-patterns from `CLAUDE.md` plus universal ones
 - **Code patterns** — conventions from `CLAUDE.md` encoded directly into Phase 3
