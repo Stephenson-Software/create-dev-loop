@@ -86,7 +86,7 @@ Compile findings into these answers before writing the skill:
 | Question | Where to find it |
 |----------|-----------------|
 | What is the build command? | pom.xml / package.json / Makefile / README |
-| What is the test command? | Same; also CI workflow `run:` steps |
+| What is the test command? | Same; also CI workflow `run:` steps. If the repo has no build system and/or no automated test suite (docs-only, config-only, single-template repos), record that explicitly — the `COMPILE_CMD` / `TEST_CMD` rows in the Step 4 table cover how the loop degrades |
 | Is there a lint/format step required before committing? | Linter config files, CI workflow |
 | What is the branch naming convention? | CONTRIBUTING.md or inferred from recent branches (`git branch -r`) |
 | What merge strategy does the repo use? | Recent PR merge commits; GitHub repo settings if accessible |
@@ -263,6 +263,7 @@ Verify the build is clean:
 {{TEST_CMD}}
 {{#if LINT_CMD}}{{LINT_CMD}}{{/if}}
 \`\`\`
+{{#if VALIDATION_NOTE}}{{VALIDATION_NOTE}}{{/if}}
 
 Fix all failures before proceeding. Never skip tests or bypass hooks.
 
@@ -403,7 +404,7 @@ EOF
 git push
 \`\`\`
 
-Run `{{TEST_CMD}}` after every fix. Do not push a broken build.
+{{REVALIDATE_INSTRUCTION}} after every fix. Do not push a broken build.
 
 ---
 
@@ -563,9 +564,11 @@ Use findings from Step 2 to substitute each `{{placeholder}}`. The table below c
 | `GITHUB_OWNER/REPO` | `gh repo view --json nameWithOwner -q .nameWithOwner` |
 | `DEFAULT_BRANCH` | `gh repo view --json defaultBranchRef -q .defaultBranchRef.name` |
 | `BRANCH_PREFIX` | From CONTRIBUTING.md, or `feature` if not specified |
-| `COMPILE_CMD` | Fastest command that catches syntax/import errors without running tests. For Maven: `MVN=$([ -f ./mvnw ] && echo ./mvnw \|\| echo mvn) && $MVN compile` |
-| `TEST_CMD` | Full test suite command from CI workflow or README. For Maven: `$MVN test` (reuse the `MVN` variable set above) |
+| `COMPILE_CMD` | Fastest command that catches syntax/import errors without running tests. For Maven: `MVN=$([ -f ./mvnw ] && echo ./mvnw \|\| echo mvn) && $MVN compile`. **If the repo has no build system** (docs-only, config-only, single-template repos), substitute the cheapest mechanical consistency check that would actually catch breakage — e.g. a `grep` for unresolved placeholders, `jq -e . <config>`, a YAML/schema lint. If no such check exists, substitute a shell comment naming what gates correctness instead (e.g. `# no build system — see the validation steps below`) so the fence stays valid bash. |
+| `TEST_CMD` | Full test suite command from CI workflow or README. For Maven: `$MVN test` (reuse the `MVN` variable set above). **If the repo has no automated test suite** — confirm it (`CLAUDE.md` says so, no test directory, no CI test job); don't assume — substitute a shell comment pointing at the project's manual validation steps, e.g. `# re-run the Phase 3 manual validation checklist`, naming the same check `EXTERNAL_SIGNAL_CMD` renders. Substitute the same text everywhere `{{TEST_CMD}}` appears (Phase 3 verify block, Phase 8 rebase fence). |
 | `LINT_CMD` | Linter/formatter command if present in CI; omit section if absent |
+| `VALIDATION_NOTE` | Only when `COMPILE_CMD` or `TEST_CMD` is a shell comment rather than a real command: a one-line parenthetical placed directly under the Phase 3 verify fence, stating what actually gates correctness — e.g. `(no automated test command or linter exists for this repo — the manual validation checklist in Phase 4 is the real gate)`. Omit the conditional block entirely when both are real commands. |
+| `REVALIDATE_INSTRUCTION` | Imperative clause opening the Phase 6 re-verification sentence (capitalized, no trailing period; it is followed by "after every fix"). With a test suite: `Run \`$MVN test\``. Without one: `Re-run the Phase 3 manual validation checklist`. Must name the same check as `TEST_CMD` and `EXTERNAL_SIGNAL_CMD`. |
 | `EXTERNAL_SIGNAL_LABEL` | Short label for the anchor used in Phase 4 self-review. `CI` when the repo has CI workflows; `manual validation` when the project uses a fixture or test-command checklist (e.g. a doc-only repo); otherwise a project-specific phrase like `snapshot regression suite`. |
 | `EXTERNAL_SIGNAL_CMD` | The command or step list that produces the anchor signal, rendered as a fenced code block indented 3 spaces so it nests under the Phase 4 step 1 list item. For CI: a bash fence containing `gh pr checks <number> --watch`. For manual validation: a numbered checklist of validation steps wrapped in a fence (or written as a plain indented checklist). Whichever form is used, the entire substituted block must keep the 3-space indent on every line. |
 | `REVIEWER` | Primary reviewer from CODEOWNERS or recent PRs; `Copilot` if configured |
@@ -578,6 +581,8 @@ Use findings from Step 2 to substitute each `{{placeholder}}`. The table below c
 | `DO_NOT_AUTO_MERGE` | Repo-specific paths that require human review before merge (in addition to the universal entries in Phase 8). Common entries: `plugin.yml` (Bukkit plugins), `pom.xml` (Maven projects), `Cargo.toml` (Rust), `package.json` (Node), the project's main config or schema file. Format as one Markdown bullet per entry, with backticks around the path or glob and a brief rationale after an em-dash. Omit the conditional block entirely if no repo-specific entries apply. |
 | `TEMPLATE_VERSION` | Short commit SHA of the `create-dev-loop` repo at generation time. Capture with `git -C <path-to-create-dev-loop> rev-parse --short HEAD`. Becomes part of an HTML comment at the top of the generated skill so future cycles can detect template drift. |
 | `GENERATED_AT` | ISO-8601 UTC timestamp at generation time. Capture with `date -u +%Y-%m-%dT%H:%M:%SZ`. Pairs with `TEMPLATE_VERSION` in the HTML-comment header. |
+
+**When the repo has no build system or no automated test suite**, `COMPILE_CMD`, `TEST_CMD`, `REVALIDATE_INSTRUCTION`, `VALIDATION_NOTE`, and `EXTERNAL_SIGNAL_CMD` must all name the *same* check — whatever the project actually gates correctness on. Also reword the Edge cases entries that name tests ("Tests fail during implementation", "Tests fail after addressing a comment", "A test fails intermittently") so they refer to that check rather than a test suite; keep the entry order, wording of the surrounding rules, and phase numbers unchanged.
 
 For `SCAN_CHECKLIST`, always include these universal items plus any repo-specific ones:
 - Missing tests on new public methods
