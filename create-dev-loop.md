@@ -156,7 +156,7 @@ git log --oneline -10
 \`\`\`
 
 **Check for open PRs from previous cycles first.** If any open PR exists, decide before doing anything else:
-- If the PR is still valid (tests green, no conflicts), **first confirm a Phase 4 self-review was actually posted** (a carried-over PR from a prior cycle may never have completed it). If none is recorded, perform the Phase 4 self-review now (CI must be green first) before jumping to Phase 5. Otherwise jump to Phase 5 to re-poll for review.
+- If the PR is still valid ({{EXTERNAL_SIGNAL_LABEL}} green, no conflicts), **first confirm a Phase 4 self-review was actually posted** (a carried-over PR from a prior cycle may never have completed it). If none is recorded, perform the Phase 4 self-review now ({{EXTERNAL_SIGNAL_LABEL}} must be green first) before jumping to Phase 5. Otherwise jump to Phase 5 to re-poll for review.
 - If the PR is stale or conflicted, close it with a comment explaining why, then proceed with triage.
 - **If the open PR was authored by a concurrent session/another author** (not this loop), do not misread "don't open a new PR" as "do nothing": adopt it — bring it current with `{{DEFAULT_BRANCH}}`, re-run full {{EXTERNAL_SIGNAL_LABEL}}, review, and merge if green (or close it with a reason). Under a `git worktree` workflow the main checkout stays on `{{DEFAULT_BRANCH}}` to avoid colliding with the other session's tree.
 
