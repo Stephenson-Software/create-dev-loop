@@ -55,7 +55,7 @@ The skill reports the command name and a summary of the choices made (build syst
 
 Each generated `<slug>-dev-loop` skill encodes:
 
-- **Build & test commands** — exact commands from CI or build files, not guesses
+- **Build & test commands** — exact commands from CI or build files, not guesses; repos with no build system or no test suite get the project's real validation steps in their place, not an invented command
 - **Branch naming** — from `CONTRIBUTING.md` or inferred from recent branches
 - **Reviewer** — from `CODEOWNERS`, recent PR reviewers, or `Copilot` if configured
 - **Lint/format step** — only if present in CI; omitted otherwise
