@@ -59,7 +59,7 @@ Each generated `<slug>-dev-loop` skill encodes:
 - **Branch naming** — from `CONTRIBUTING.md` or inferred from recent branches
 - **Reviewer** — from `CODEOWNERS`, recent PR reviewers, or `Copilot` if configured
 - **Lint/format step** — only if present in CI; omitted otherwise
-- **External signal anchor** — the objective check the self-review must be green against: CI where the repo has workflows, a manual-validation checklist where it doesn't
+- **External signal anchor** — the objective check the self-review must be green against: CI where the repo has workflows, otherwise a manual-validation checklist or whatever else the project actually verifies against
 - **Documentation sources** — every doc file that can drift from the implementation
 - **Scan checklist** — repo-specific anti-patterns from `CLAUDE.md` plus universal ones
 - **Code patterns** — conventions from `CLAUDE.md` encoded directly into Phase 3
