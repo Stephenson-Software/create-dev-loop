@@ -96,7 +96,9 @@ def check_readme_steps_sync(cdl_text: str, readme_text: str) -> None:
 
 def check_local_links() -> None:
     link_re = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
-    for doc in REPO_ROOT.glob("*.md"):
+    for doc in REPO_ROOT.rglob("*.md"):
+        if ".git" in doc.parts:
+            continue
         text = doc.read_text(encoding="utf-8")
         for target in link_re.findall(text):
             if target.startswith(("http://", "https://", "mailto:")):
@@ -104,7 +106,7 @@ def check_local_links() -> None:
             path_part = target.split("#", 1)[0]
             if not path_part:
                 continue
-            resolved = (REPO_ROOT / path_part).resolve()
+            resolved = (doc.parent / path_part).resolve()
             if not resolved.exists():
                 errors.append(f"{doc.name}: broken relative link -> {target}")
 
