@@ -40,8 +40,13 @@ contributors:
    capability, `fix/<short-name>` for corrections.
 2. Edit `create-dev-loop.md` (and `README.md` / `RESEARCH.md` / `CLAUDE.md`
    as needed — see "Project conventions" above).
-3. Validate your change. There is no automated test suite; the real test is
-   running `/create-dev-loop` against a real repository and confirming:
+3. Validate your change. CI (`.github/workflows/ci.yml`) runs automatically
+   on your PR and mechanically checks two of the rules above — every
+   `{{placeholder}}` has a substitution-table row, and README's Step list
+   stays 1:1 with `create-dev-loop.md` — plus local relative-link checks. It
+   catches doc drift, not behavior. There is no automated behavioral test
+   suite; the real test for behavior is running `/create-dev-loop` against a
+   real repository and confirming:
    - the generated skill file compiles (no unresolved `{{placeholders}}`
      remain)
    - the slash command link resolves correctly
