@@ -193,7 +193,7 @@ Last reviewed: 2026-07-25.
 **Implication for create-dev-loop.**
 - The existing retrofit checklist in `CLAUDE.md` (promote rule to template *and* retrofit existing child skills) is empirically justified — forward-only template fixes leave existing skills silently lagging.
 - Consider adding a "skill version + tested-against-model" header to generated skills, so a future self-audit can distinguish drift from a fresh bug.
-- Consider periodic regression checks: dry-run the generated skill against a known-good fixture repo and compare output to a recorded baseline. The `dpm-dev-loop` / `herald-dev-loop` references could serve as fixtures.
+- Consider periodic regression checks: dry-run the generated skill against a known-good fixture repo and compare output to a recorded baseline. The maintainer's private `dpm-dev-loop` / `herald-dev-loop` repos serve as fixtures internally; external contributors can substitute any repo they maintain.
 
 **Implementations.**
 - PR #33 (Template-version header for drift detection): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds `<!-- template-version: SHA -->` and `<!-- generated-at: ISO-timestamp -->` HTML comments to the top of every newly generated skill, plus `{{TEMPLATE_VERSION}}` and `{{GENERATED_AT}}` rows to the Step 4 substitution table. Implements the second bullet of this finding's implications; the periodic regression-check (third bullet) is a separate future change. The drift-detection step in `cdl-dev-loop` Phase 9 is also deferred — it belongs in the cdl-dev-loop repo, not here.
