@@ -23,7 +23,7 @@ Repo-specific findings (build commands, reviewer names, branch prefixes) belong 
 
 ## Promoting a rule into the template
 
-When you add a new rule to `create-dev-loop.md` because the same lesson keeps showing up in multiple skills' self-audits, **also open retrofit PRs against every existing skill that predates the change.** The template only fixes drift forward; existing skills will silently lag until their next self-audit cycle. See the "Promoting a carry-over into the template" section of [`my-claude-skills/CONVENTIONS.md`](https://github.com/dmccoystephenson/my-claude-skills/blob/main/CONVENTIONS.md) for the checklist.
+When you add a new rule to `create-dev-loop.md` because the same lesson keeps showing up in multiple skills' self-audits, **also open retrofit PRs against every existing skill that predates the change.** The template only fixes drift forward; existing skills will silently lag until their next self-audit cycle. (The project maintainer tracks this checklist in a private `my-claude-skills/CONVENTIONS.md` reference; external contributors without access should instead note in the PR description which existing skills likely need a retrofit pass, so a maintainer can follow up.)
 
 ## Grounding work in research
 
@@ -45,7 +45,7 @@ There is no automated test suite. Validate changes by running `/create-dev-loop`
 4. The `<!-- template-version: <sha> -->` and `<!-- generated-at: <iso8601> -->` HTML comments appear at the top of the generated skill, with the SHA matching the create-dev-loop commit you generated from
 5. If the target repo already has a skill, exercise `MODE=update` end-to-end: confirm the abort-on-uncommitted-changes check, the pre-overwrite diff prompt, and that Steps 6–7 are correctly skipped
 
-Use `dpm-dev-loop` or `herald-dev-loop` as reference implementations when evaluating whether a generated skill looks correct.
+The maintainer validates against private reference implementations (`dpm-dev-loop`, `herald-dev-loop`); external contributors without access should validate by running `/create-dev-loop` against any real repository they maintain and manually checking the five items above.
 
 ## Commit and PR conventions
 

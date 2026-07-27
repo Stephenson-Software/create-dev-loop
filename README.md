@@ -65,11 +65,6 @@ Each generated `<slug>-dev-loop` skill encodes:
 - **Code patterns** — conventions from `CLAUDE.md` encoded directly into Phase 3
 - **Do-not-auto-merge paths** — files that require human review before merge (e.g. `plugin.yml`, `pom.xml`), in addition to universal entries like `.github/workflows/*`
 
-## Related skills
-
-- `dpm-dev-loop` — the reference implementation this skill is modeled on
-- `herald-dev-loop` — another example of a repo-specific generated loop
-
 ## Research basis
 
 Design decisions for this project are grounded in empirical research on autonomous coding agents — PR-size effects on agent success, self-critique failure modes, context rot in long-horizon runs, and related findings. See [`RESEARCH.md`](RESEARCH.md) for citations and the implications for each phase.
