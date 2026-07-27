@@ -1,5 +1,7 @@
 # create-dev-loop
 
+[![CI](https://github.com/dmccoystephenson/create-dev-loop/actions/workflows/ci.yml/badge.svg)](https://github.com/dmccoystephenson/create-dev-loop/actions/workflows/ci.yml)
+
 A Claude Code skill that generates a **tailored autonomous dev loop** for any git repository — one slash command away from continuous, repo-aware development.
 
 ## Why a tailored dev loop?

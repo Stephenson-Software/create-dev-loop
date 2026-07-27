@@ -38,7 +38,7 @@ When proposing a change to `create-dev-loop.md`, the generated template, or a ph
 
 ## Testing changes
 
-There is no automated test suite. Validate changes by running `/create-dev-loop` against a real repo and confirming:
+CI (`.github/workflows/ci.yml`) runs `scripts/check_docs.py`, which mechanically enforces two of the rules above — every `{{placeholder}}` in the template has a Step 4 substitution-table row, and README's "What it does" list stays 1:1 with the Steps — plus checks that relative links between the repo's own docs resolve. It catches doc-drift, not behavior; there is no automated test of what `/create-dev-loop` actually generates. Validate behavioral changes by running `/create-dev-loop` against a real repo and confirming:
 1. The generated skill file compiles (no unresolved `{{placeholders}}` remain)
 2. The slash command link resolves correctly
 3. The reported summary accurately reflects the target repo
