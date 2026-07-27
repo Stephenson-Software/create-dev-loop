@@ -22,8 +22,11 @@ touch the template (e.g. docs-only).
 ## Test plan
 
 <!--
-There is no automated test suite for this repo. Describe how you validated
-the change — see CLAUDE.md's "Testing changes" section (running
-/create-dev-loop against a real repo and checking the generated skill
-compiles, MODE=update behaves correctly, etc.).
+CI (.github/workflows/ci.yml) runs scripts/check_docs.py on every PR and
+mechanically checks the first two Doc sync boxes above, plus relative links
+between the repo's own docs. It catches doc drift, not behavior. There is no
+automated behavioral test suite, so describe how you validated the change —
+see CLAUDE.md's "Testing changes" section (running /create-dev-loop against
+a real repo and checking the generated skill compiles, MODE=update behaves
+correctly, etc.).
 -->
