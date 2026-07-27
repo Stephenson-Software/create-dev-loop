@@ -661,11 +661,19 @@ done
 
 ---
 
-### 7 — Record the skill in a-private-repo-3
+### 7 — Record the skill in a personal catalog (optional)
 
-**Skip this step if `MODE=update`** — the entry already exists from the initial generation. (Run only when `MODE=fresh` or `MODE=overwrite`.)
+**Skip this step if `MODE=update`** — the entry already exists from the initial generation, if one was made. (Run only when `MODE=fresh` or `MODE=overwrite`.)
 
-Open `~/a-private-repo-3/README.md` and append a new row to the skills table using the GitHub repo created in Step 6 (`OWNER=$(gh api user -q .login)`, same as Step 6):
+`~/a-private-repo-3` is an optional personal catalog convention, not something every user has. Check first:
+
+```bash
+[ -d ~/a-private-repo-3/.git ] && echo present || echo absent
+```
+
+**If absent**, skip this step silently — it is not required for the generated skill to work (Step 5 already registered the slash command). Do not create the directory or repo on the user's behalf.
+
+**If present**, open `~/a-private-repo-3/README.md` and append a new row to the skills table using the GitHub repo created in Step 6 (`OWNER=$(gh api user -q .login)`, same as Step 6):
 
 ```
 | <slug>-dev-loop | `/<slug>-dev-loop` | [$OWNER/<slug>-dev-loop](https://github.com/$OWNER/<slug>-dev-loop) | Autonomous dev loop for {{PROJECT_NAME}} |

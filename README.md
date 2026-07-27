@@ -29,7 +29,7 @@ Running `/create-dev-loop` in any repo runs seven Steps (mapped 1:1 to Steps 1�
 4. **Fill in placeholders** — substitutes every `{{PLACEHOLDER}}` and `{{#if FLAG}}` token from Step 2's findings, using the Step 4 substitution table as the contract
 5. **Register** it as a slash command at `~/.claude/commands/<slug>-dev-loop.md`
 6. **Create** a private GitHub repo (`<slug>-dev-loop`) to serve as the issue tracker for self-audit findings, and seed it with the five gap-issue labels Phase 9 files against (skipped in update mode)
-7. **Record** the skill in `~/a-private-repo-3/README.md` for discoverability (skipped in update mode)
+7. **Record** the skill in `~/a-private-repo-3/README.md` for discoverability, if that optional personal catalog repo exists (skipped in update mode, and skipped silently if the catalog isn't present)
 
 The generated skill drives a 10-phase loop: triage → work selection → implementation → PR → review → address comments → doc check → merge → self-audit → repeat.
 
@@ -41,7 +41,7 @@ The generated skill drives a 10-phase loop: triage → work selection → implem
 
 Run this from inside any git repository. If a skill already exists for the repo, you'll be asked to choose:
 
-- **update** *(default)* — re-derive the skill from the current template and current repo state, then show a diff before overwriting. Use this to pull in template improvements without re-creating the GitHub repo or `a-private-repo-3` entry. Aborts if the local skill directory has uncommitted changes.
+- **update** *(default)* — re-derive the skill from the current template and current repo state, then show a diff before overwriting. Use this to pull in template improvements without re-creating the GitHub repo or catalog entry. Aborts if the local skill directory has uncommitted changes.
 - **overwrite** — full regeneration, idempotently re-asserting the repo and registry entry.
 - **cancel** — exit without changes.
 
