@@ -23,7 +23,7 @@ Repo-specific findings (build commands, reviewer names, branch prefixes) belong 
 
 ## Promoting a rule into the template
 
-When you add a new rule to `create-dev-loop.md` because the same lesson keeps showing up in multiple skills' self-audits, **also open retrofit PRs against every existing skill that predates the change.** The template only fixes drift forward; existing skills will silently lag until their next self-audit cycle. See the "Promoting a carry-over into the template" section of [`a-private-repo-3/CONVENTIONS.md`](https://github.com/dmccoystephenson/a-private-repo-3/blob/main/CONVENTIONS.md) for the checklist.
+When you add a new rule to `create-dev-loop.md` because the same lesson keeps showing up in multiple skills' self-audits, **also open retrofit PRs against every existing skill that predates the change.** The template only fixes drift forward; existing skills will silently lag until their next self-audit cycle. (The project maintainer tracks this checklist in a private `a-private-repo-3/CONVENTIONS.md` reference; external contributors without access should instead note in the PR description which existing skills likely need a retrofit pass, so a maintainer can follow up.)
 
 ## Grounding work in research
 
@@ -45,7 +45,7 @@ CI (`.github/workflows/ci.yml`) runs `scripts/check_docs.py`, which mechanically
 4. The `<!-- template-version: <sha> -->` and `<!-- generated-at: <iso8601> -->` HTML comments appear at the top of the generated skill, with the SHA matching the create-dev-loop commit you generated from
 5. If the target repo already has a skill, exercise `MODE=update` end-to-end: confirm the abort-on-uncommitted-changes check, the pre-overwrite diff prompt, and that Steps 6–7 are correctly skipped
 
-Use `a-private-repo-1` or `a-private-repo-2` as reference implementations when evaluating whether a generated skill looks correct.
+The maintainer validates against private reference implementations (`a-private-repo-1`, `a-private-repo-2`); external contributors without access should validate by running `/create-dev-loop` against any real repository they maintain and manually checking the five items above.
 
 ## Commit and PR conventions
 

@@ -118,7 +118,7 @@ Autonomous iterative development loop for {{PROJECT_NAME}}.
 
 **Working directory:** {{REPO_ROOT}} (resolved at runtime — see Phase 1; do not assume this literal path exists)
 **Project repo:** {{GITHUB_OWNER}}/{{GITHUB_REPO}}
-**Skill repo:** dmccoystephenson/<slug>-dev-loop (issues for self-audit findings go here)
+**Skill repo:** {{SKILL_REPO_OWNER}}/<slug>-dev-loop (issues for self-audit findings go here)
 {{#if CLAUDE_MD}}**Project guidance:** read `CLAUDE.md` at the start of each cycle if context is cold.{{/if}}
 
 ---
@@ -472,7 +472,7 @@ gh issue close <number> --comment "Resolved in PR #<n>."
 
 1. **Check for duplicates** before filing:
    \`\`\`bash
-   gh issue list --repo dmccoystephenson/<slug>-dev-loop --state open
+   gh issue list --repo {{SKILL_REPO_OWNER}}/<slug>-dev-loop --state open
    \`\`\`
 
 2. **Run the self-audit rubric.** For each item, mark PASS / FAIL / "no signal this cycle" with a one-line justification grounded in the cycle's actual events:
@@ -487,7 +487,7 @@ gh issue close <number> --comment "Resolved in PR #<n>."
 
 3. **For each FAIL item not already tracked, file a labeled issue** so triage knows where the gap belongs:
    \`\`\`bash
-   gh issue create --repo dmccoystephenson/<slug>-dev-loop \
+   gh issue create --repo {{SKILL_REPO_OWNER}}/<slug>-dev-loop \
      --title "<short description of the gap>" \
      --body "<what was ambiguous or missing, and suggested instruction text>" \
      --label <one-of: template-rule | repo-specific | edge-case | research-gap | process>
@@ -540,7 +540,7 @@ git push origin --delete {{BRANCH_PREFIX}}/<name>
 **Two issues conflict mid-implementation:** finish the further-along one; file a note on the other.
 **Cycle exceeds abort budget:** if the cycle's tool calls exceed ~500 or accumulated context exceeds ~200k tokens without converging, abort rather than push through. The half-life model (RESEARCH.md §4) predicts persistence past a budget is strictly worse than restart with fresh context. Steps:
 1. Mark the in-flight PR `Draft` (`gh pr ready --undo <number>`) or, if no PR is open, push the branch with a `WIP:` commit so work isn't lost.
-2. File a gap issue on `dmccoystephenson/<slug>-dev-loop` with title `Abort budget exceeded on <branch>` and body containing:
+2. File a gap issue on `{{SKILL_REPO_OWNER}}/<slug>-dev-loop` with title `Abort budget exceeded on <branch>` and body containing:
    - **Issues in scope:** the `#N`s the cycle was trying to close
    - **Files modified so far:** path list
    - **Where convergence stalled:** the last phase reached and what was blocking it
@@ -558,10 +558,11 @@ Use findings from Step 2 to substitute each `{{placeholder}}`. The table below c
 | Placeholder | How to determine it |
 |-------------|---------------------|
 | `PROJECT_NAME` | Directory name or `name` field in build file |
-| `IDENTITY` | One sentence completing "the kind of skill that ___". Draft it from the repo's actual posture: read `CLAUDE.md`, `CONTRIBUTING.md`, and 2-3 recent PRs to infer what *this* skill is optimizing for in *this* repo. The identity must **name what the skill actively rejects** (e.g. "never lets the four sources of truth drift"), not just what it pursues. See the Identity statements section of [a-private-repo-3/CONVENTIONS.md](https://github.com/dmccoystephenson/a-private-repo-3/blob/main/CONVENTIONS.md). |
+| `IDENTITY` | One sentence completing "the kind of skill that ___". Draft it from the repo's actual posture: read `CLAUDE.md`, `CONTRIBUTING.md`, and 2-3 recent PRs to infer what *this* skill is optimizing for in *this* repo. The identity must **name what the skill actively rejects** (e.g. "never lets the four sources of truth drift"), not just what it pursues. |
 | `REPO_ROOT` | Output of `git rev-parse --show-toplevel`. Used as the *configured* fallback path in the Phase 1 resolution block, not as a hardcoded `cd` target. |
 | `REPO_ENV_VAR` | Name of the per-repo override env var the Phase 1 resolver checks first, derived from the repo slug: uppercase, non-alphanumerics→`_`, suffix `_DIR` (e.g. `dpm` → `DPM_DIR`, `medieval-factions` → `MEDIEVAL_FACTIONS_DIR`). Substituted bare (no braces) into `${VAR}` in the resolver. |
 | `GITHUB_OWNER/REPO` | `gh repo view --json nameWithOwner -q .nameWithOwner` |
+| `SKILL_REPO_OWNER` | `gh api user -q .login` — the authenticated GitHub account that ran `/create-dev-loop`, i.e. the owner of the skill-tracker repo created in Step 6. Not necessarily the same as `GITHUB_OWNER` when the target project lives under an org. |
 | `DEFAULT_BRANCH` | `gh repo view --json defaultBranchRef -q .defaultBranchRef.name` |
 | `BRANCH_PREFIX` | From CONTRIBUTING.md, or `feature` if not specified |
 | `COMPILE_CMD` | Fastest command that catches syntax/import errors without running tests. For Maven: `MVN=$([ -f ./mvnw ] && echo ./mvnw \|\| echo mvn) && $MVN compile`. **If the repo has no build system** (docs-only, config-only, single-template repos), substitute the cheapest mechanical consistency check that would actually catch breakage — e.g. a `grep` for unresolved placeholders, `jq -e . <config>`, a YAML/schema lint. If no such check exists, substitute a shell comment naming what gates correctness instead (e.g. `# no build system — see the validation steps below`) so the fence stays valid bash. |
@@ -658,10 +659,10 @@ done
 
 **Skip this step if `MODE=update`** — the entry already exists from the initial generation. (Run only when `MODE=fresh` or `MODE=overwrite`.)
 
-Open `~/a-private-repo-3/README.md` and append a new row to the skills table using the GitHub repo created in Step 6:
+Open `~/a-private-repo-3/README.md` and append a new row to the skills table using the GitHub repo created in Step 6 (`OWNER=$(gh api user -q .login)`, same as Step 6):
 
 ```
-| <slug>-dev-loop | `/<slug>-dev-loop` | [dmccoystephenson/<slug>-dev-loop](https://github.com/dmccoystephenson/<slug>-dev-loop) | Autonomous dev loop for {{PROJECT_NAME}} |
+| <slug>-dev-loop | `/<slug>-dev-loop` | [$OWNER/<slug>-dev-loop](https://github.com/$OWNER/<slug>-dev-loop) | Autonomous dev loop for {{PROJECT_NAME}} |
 ```
 
 Then commit and push:
