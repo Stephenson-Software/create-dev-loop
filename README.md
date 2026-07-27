@@ -71,6 +71,10 @@ Each generated `<slug>-dev-loop` skill encodes:
 
 Design decisions for this project are grounded in empirical research on autonomous coding agents — PR-size effects on agent success, self-critique failure modes, context rot in long-horizon runs, and related findings. See [`RESEARCH.md`](RESEARCH.md) for citations and the implications for each phase.
 
+## Contributing
+
+Contributions are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow and this project's conventions, and [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) for community standards.
+
 ## License
 
 This project is licensed under the **MIT License**.
