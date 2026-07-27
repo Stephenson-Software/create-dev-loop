@@ -30,7 +30,7 @@ Running `/create-dev-loop` in any repo runs seven Steps (mapped 1:1 to Steps 1�
 4. **Fill in placeholders** — substitutes every `{{PLACEHOLDER}}` and `{{#if FLAG}}` token from Step 2's findings, using the Step 4 substitution table as the contract
 5. **Register** it as a slash command at `~/.claude/commands/<slug>-dev-loop.md`
 6. **Create** a private GitHub repo (`<slug>-dev-loop`) to serve as the issue tracker for self-audit findings, and seed it with the five gap-issue labels Phase 9 files against (skipped in update mode)
-7. **Record** the skill in `~/a-private-repo-3/README.md` for discoverability, if that optional personal catalog repo exists (skipped in update mode, and skipped silently if the catalog isn't present)
+7. **Record** the skill in a personal skills catalog for discoverability, if you have one and have pointed `$CLAUDE_SKILLS_CATALOG` at it (skipped in update mode, and skipped silently when that variable is unset — there is no default path)
 
 The generated skill drives a 10-phase loop: triage → work selection → implementation → PR → review → address comments → doc check → merge → self-audit → repeat.
 
@@ -67,6 +67,23 @@ Each generated `<slug>-dev-loop` skill encodes:
 - **Scan checklist** — repo-specific anti-patterns from `CLAUDE.md` plus universal ones
 - **Code patterns** — conventions from `CLAUDE.md` encoded directly into Phase 3
 - **Do-not-auto-merge paths** — files that require human review before merge (e.g. `plugin.yml`, `pom.xml`), in addition to universal entries like `.github/workflows/*`
+
+## Running it across many repos
+
+A generated skill is invoked interactively, one repo at a time, as
+`/<slug>-dev-loop`. To run them unattended across a whole fleet of repos —
+on a schedule, with safety gating and a merge allow-list — see
+[`gardener`](https://github.com/dmccoystephenson/gardener), this project's
+open-source companion. `gardener tend` dispatches a repo's generated skill
+headlessly and bootstraps one via `/create-dev-loop` if the repo doesn't
+have one yet; `gardener overnight` does that across an opt-in list of repos
+within a time budget.
+
+The split is deliberate: create-dev-loop decides *what a skill knows about
+its repo*, gardener decides *when and how safely one gets to run*. Neither
+requires the other — skills generated here work standalone as slash
+commands, and gardener is useful for any repo that has a dev-loop skill
+however it was authored.
 
 ## Research basis
 

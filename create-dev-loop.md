@@ -667,15 +667,15 @@ done
 
 **Skip this step if `MODE=update`** — the entry already exists from the initial generation, if one was made. (Run only when `MODE=fresh` or `MODE=overwrite`.)
 
-`~/a-private-repo-3` is an optional personal catalog convention, not something every user has. Check first:
+Some users keep a personal catalog repo listing every skill they have and where it lives. This is entirely opt-in: it is configured by pointing `$CLAUDE_SKILLS_CATALOG` at that repo's working directory, and there is no default path — a hardcoded one would mean writing into a directory the user never asked this skill to touch. Check first:
 
 ```bash
-[ -d ~/a-private-repo-3/.git ] && echo present || echo absent
+[ -n "$CLAUDE_SKILLS_CATALOG" ] && [ -d "$CLAUDE_SKILLS_CATALOG/.git" ] && echo present || echo absent
 ```
 
-**If absent**, skip this step silently — it is not required for the generated skill to work (Step 5 already registered the slash command). Do not create the directory or repo on the user's behalf.
+**If absent** (unset, or set to something that isn't a git repo), skip this step silently — it is not required for the generated skill to work (Step 5 already registered the slash command). Do not create the directory or repo on the user's behalf, and do not guess at a catalog location.
 
-**If present**, open `~/a-private-repo-3/README.md` and append a new row to the skills table using the GitHub repo created in Step 6 (`OWNER=$(gh api user -q .login)`, same as Step 6):
+**If present**, open `$CLAUDE_SKILLS_CATALOG/README.md` and append a new row to its skills table using the GitHub repo created in Step 6 (`OWNER=$(gh api user -q .login)`, same as Step 6). Match the existing table's column order rather than assuming this one:
 
 ```
 | <slug>-dev-loop | `/<slug>-dev-loop` | [$OWNER/<slug>-dev-loop](https://github.com/$OWNER/<slug>-dev-loop) | Autonomous dev loop for {{PROJECT_NAME}} |
@@ -684,8 +684,10 @@ done
 Then commit and push:
 
 ```bash
-cd ~/a-private-repo-3
+cd "$CLAUDE_SKILLS_CATALOG"
 git add README.md
 git commit -m "Add <slug>-dev-loop skill"
 git push
 ```
+
+If the catalog has no README table to append to, skip rather than inventing one.

@@ -21,9 +21,17 @@ Changes to **how repos are explored or how skills are structured** belong in `cr
 
 Repo-specific findings (build commands, reviewer names, branch prefixes) belong **only** in the generated skill, never back-ported here.
 
+## What belongs here vs. in gardener
+
+[`gardener`](https://github.com/dmccoystephenson/gardener) is a separate open-source project that dispatches generated skills headlessly across a fleet of repos. It reads a generated skill from `~/local-skills/<slug>-dev-loop/<slug>-dev-loop.md` and its `~/.claude/commands/<slug>-dev-loop.md` symlink — the exact paths Steps 3 and 5 write — and invokes `/create-dev-loop` itself to bootstrap a skill for a repo that lacks one.
+
+That makes Steps 3, 5, and 6 a load-bearing interface, not just internal detail: **changing where a skill is written, what it's named, or what Step 6 creates is a breaking change for gardener.** Flag it in the PR description so the corresponding change can be made there.
+
+Conversely, anything about *scheduling, batching, merge authorization, or safety-gating a headless run* belongs in gardener, never here. This skill's output is a skill file; it has no opinion on who runs it or when.
+
 ## Promoting a rule into the template
 
-When you add a new rule to `create-dev-loop.md` because the same lesson keeps showing up in multiple skills' self-audits, **also open retrofit PRs against every existing skill that predates the change.** The template only fixes drift forward; existing skills will silently lag until their next self-audit cycle. (The project maintainer tracks this checklist in a private `a-private-repo-3/CONVENTIONS.md` reference; external contributors without access should instead note in the PR description which existing skills likely need a retrofit pass, so a maintainer can follow up.)
+When you add a new rule to `create-dev-loop.md` because the same lesson keeps showing up in multiple skills' self-audits, **also open retrofit PRs against every existing skill that predates the change.** The template only fixes drift forward; existing skills will silently lag until their next self-audit cycle. Note in the PR description which existing skills likely need a retrofit pass, since only the person running those skills can see which ones exist.
 
 ## Grounding work in research
 
@@ -45,7 +53,7 @@ CI (`.github/workflows/ci.yml`) runs `scripts/check_docs.py`, which mechanically
 4. The `<!-- template-version: <sha> -->` and `<!-- generated-at: <iso8601> -->` HTML comments appear at the top of the generated skill, with the SHA matching the create-dev-loop commit you generated from
 5. If the target repo already has a skill, exercise `MODE=update` end-to-end: confirm the abort-on-uncommitted-changes check, the pre-overwrite diff prompt, and that Steps 6–7 are correctly skipped
 
-The maintainer validates against private reference implementations (`a-private-repo-1`, `a-private-repo-2`); external contributors without access should validate by running `/create-dev-loop` against any real repository they maintain and manually checking the five items above.
+Validate by running `/create-dev-loop` against any real repository you maintain and manually checking the five items above. Use a low-stakes repo the first time: the skill creates a GitHub repo in Step 6 and writes to `~/local-skills/` and `~/.claude/commands/`.
 
 ## Commit and PR conventions
 

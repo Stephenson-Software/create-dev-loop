@@ -55,9 +55,9 @@ contributors:
      appear correctly
    - if you touched update-mode behavior, exercise `MODE=update` end-to-end
 
-   The maintainer validates against private reference repos for this step;
-   if you don't have a suitable repo handy, any real project you maintain
-   works as a fixture.
+   Any real project you maintain works as a fixture. Prefer a low-stakes
+   one the first time — Step 6 creates a GitHub repo, and Steps 3 and 5
+   write to `~/local-skills/` and `~/.claude/commands/`.
 4. Commit using imperative mood, no trailing period (e.g. `Add SKILL_REPO_OWNER placeholder`).
 5. Open a PR referencing any related issue with `Closes #N`. Describe what
    you tested it against.
