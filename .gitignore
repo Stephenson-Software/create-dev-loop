@@ -1,0 +1,13 @@
+# Python (scripts/check_docs.py)
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
