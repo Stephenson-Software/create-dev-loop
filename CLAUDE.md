@@ -61,3 +61,6 @@ The maintainer validates against private reference implementations (`dpm-dev-loo
 | `create-dev-loop.md` | Steps, template placeholders, and substitution table are internally consistent |
 | `README.md` | Described behavior matches what `create-dev-loop.md` actually does |
 | `RESEARCH.md` | Empirical findings are accurate, citations resolve, confidence levels reflect the current state of the evidence |
+| `CONTRIBUTING.md` | Restated conventions and the validation checklist still match this file (`CLAUDE.md`) |
+| `SECURITY.md` | The trust model still matches what Step 2 of `create-dev-loop.md` actually reads from the target repo |
+| `.github/PULL_REQUEST_TEMPLATE.md` | Doc-sync checkboxes and test-plan guidance match the current CI scope and this file (`CLAUDE.md`) |
