@@ -75,6 +75,10 @@ Design decisions for this project are grounded in empirical research on autonomo
 
 Contributions are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow and this project's conventions, and [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) for community standards.
 
+## Security
+
+`/create-dev-loop` reads and acts on content from whatever repo you run it in. See [`SECURITY.md`](SECURITY.md) for the trust model and how to report a vulnerability.
+
 ## License
 
 This project is licensed under the **MIT License**.
