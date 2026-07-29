@@ -60,7 +60,8 @@ def check_placeholders(text: str, template_body: str) -> None:
     if table_start == -1:
         errors.append("Could not find the '### 4 — Fill in the placeholders' section.")
         return
-    table_section = text[table_start:table_start + 8000]
+    next_heading = text.find("\n### ", table_start + 1)
+    table_section = text[table_start:next_heading if next_heading != -1 else len(text)]
 
     declared = set()
     for line in table_section.splitlines():
