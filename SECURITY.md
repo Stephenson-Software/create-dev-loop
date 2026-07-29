@@ -18,15 +18,30 @@ You should expect an initial response within a few days.
 ## Trust model
 
 `/create-dev-loop` reads files from whatever repository you run it in —
-`CLAUDE.md`, `CONTRIBUTING.md`, `README.md`, CI configs, `CODEOWNERS`, and
-recent PR descriptions — and uses their content to decide what the
-generated skill does: its stated identity, its self-review rubric, its
-reviewer, its branch conventions, and so on (Step 2 of
+`CLAUDE.md`, `CONTRIBUTING.md`, `README.md`, build files (`pom.xml`,
+`package.json`, `Cargo.toml`, `Makefile`, `pyproject.toml`, `go.mod`, …),
+CI workflows, linter and formatter configs, `CODEOWNERS`, the PR template,
+documentation sources, and recent commit and PR history — and uses their
+content to decide what the generated skill does (Step 2 of
 `create-dev-loop.md`).
 
-This means the target repo's content directly shapes an autonomous
-skill that will later create branches, open PRs, and push commits with
-`gh`/`git`. **Only run `/create-dev-loop` against repositories you trust.**
+That content shapes more than cosmetic details like the skill's stated
+identity, its reviewer, or its branch prefix. Step 4 also derives from it:
+
+- **The shell commands the generated skill runs.** `COMPILE_CMD`,
+  `TEST_CMD`, `LINT_CMD`, and `EXTERNAL_SIGNAL_CMD` are taken from the
+  target repo's build files and CI workflows, and the generated skill
+  executes them verbatim — in its Phase 3 build-verification step and its
+  Phase 4 external-signal anchor.
+- **Which paths are exempt from autonomous merge.** `DO_NOT_AUTO_MERGE`
+  decides what the generated skill refuses to merge without a human.
+- **What the skill checks itself against.** `SELF_REVIEW_RUBRIC` becomes
+  the repo-specific half of its pre-merge self-review.
+
+This means the target repo's content directly shapes an autonomous skill
+that will later run those commands and create branches, open PRs, push
+commits, and merge PRs with `gh`/`git`. **Only run `/create-dev-loop`
+against repositories you trust.**
 A repository crafted to manipulate the generation process (e.g. planted
 instructions in `CLAUDE.md` aimed at the agent rather than at humans) could
 cause the generated skill to encode unsafe or unintended behavior. This is
