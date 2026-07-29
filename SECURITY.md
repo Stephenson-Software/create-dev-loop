@@ -34,7 +34,10 @@ identity, its reviewer, or its branch prefix. Step 4 also derives from it:
   executes them verbatim — in its Phase 3 build-verification step and its
   Phase 4 external-signal anchor.
 - **Which paths are exempt from autonomous merge.** `DO_NOT_AUTO_MERGE`
-  decides what the generated skill refuses to merge without a human.
+  adds to the paths the generated skill refuses to merge without a human.
+  It can only widen that list — a universal baseline (`.github/workflows/*`,
+  anything under `security/`, large deletions) holds regardless of what the
+  target repo says.
 - **What the skill checks itself against.** `SELF_REVIEW_RUBRIC` becomes
   the repo-specific half of its pre-merge self-review.
 
