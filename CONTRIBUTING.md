@@ -33,6 +33,16 @@ contributors:
 - If your change implements or contradicts a finding in `RESEARCH.md`,
   update that file in the same PR (see its "How to use this document"
   section for the entry format).
+- Repo-specific findings (build commands, reviewer names, branch prefixes)
+  belong **only** in a generated skill — never back-port them into
+  `create-dev-loop.md`. Only changes to *how repos are explored or how
+  skills are structured* belong here.
+- Steps 3, 5, and 6 are a load-bearing interface, not internal detail:
+  downstream tooling reads generated skills from exactly the paths Steps 3
+  and 5 write, and depends on the repo Step 6 creates. Changing where a
+  skill is written, what it's named, or what Step 6 creates is a breaking
+  change — call it out in your PR description. See "What belongs here vs.
+  in gardener" in [`CLAUDE.md`](CLAUDE.md).
 
 ## Making a change
 
@@ -59,8 +69,10 @@ contributors:
    one the first time — Step 6 creates a GitHub repo, and Steps 3 and 5
    write to `~/local-skills/` and `~/.claude/commands/`.
 4. Commit using imperative mood, no trailing period (e.g. `Add SKILL_REPO_OWNER placeholder`).
+   Don't add a co-author trailer unless an AI agent actually authored the commit.
 5. Open a PR referencing any related issue with `Closes #N`. Describe what
-   you tested it against.
+   you tested it against. PRs are squash-merged and the branch is deleted
+   after merge.
 
 ## Retrofitting existing generated skills
 
