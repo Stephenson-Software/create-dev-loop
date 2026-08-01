@@ -245,8 +245,9 @@ Phase 3 begins by re-reading this summary. The point is to ground the implementa
 
 1. **Confirm the file exists.** `test -f <path>` or `ls <path>`.
 2. **Confirm the surface area is present.** For each file, grep for the symbol, heading, config key, or behavior named in the issue. If the issue says "the `validatePermission` method swallows the exception", run `grep -n 'validatePermission' <path>` and confirm the named entity is present. If it isn't, stop and re-triage — the localization is wrong and editing here would produce a misfire.
+3. **Confirm the issue's behavioral claims, not just the symbol's existence.** For each behavior the issue asserts ("X bypasses the permission check", "Y defaults to Z"), read the surrounding code path to the point where the behavior would actually be observable — for a permission node, that means reading past the branch that consults it to whatever check runs *next*. If the issue's description and the source disagree, **the source wins**: implement/document what the code does, and file a separate issue for the discrepancy. Never paraphrase an issue body into documentation without this confirmation.
 
-This catches the dominant agent failure mode on uncontaminated benchmarks: finding the right file to edit, not the patch itself (RESEARCH.md §3).
+This catches the dominant agent failure mode on uncontaminated benchmarks: finding the right file to edit, not the patch itself (RESEARCH.md §3). Step 3 closes a narrower gap in the same failure mode: an issue can pass its own filing-time verification ("this symbol exists and is checked here") while still misdescribing what happens *after* the check — cheap to verify existence, expensive to verify consequence.
 
 {{#if CODE_PATTERNS}}
 Follow project conventions:
@@ -257,6 +258,7 @@ Universal rules:
 - **Match sibling structure.** Before creating a new file in a directory, read the section headers / structure of every existing file in the same directory and conform to the established pattern. Example: `grep "^##" path/to/dir/*.md` for docs, or read 2–3 neighboring source files for code.
 - **Rename siblings together.** When renaming a heading or identifier that is part of a parallel pair or series (e.g. `Required X` / `Optional X`, `loadConfig` / `saveConfig`), scan for the siblings and rename them in the same commit.
 - **Scratch-file handling in a sandboxed harness.** When a step needs a scratch file for inspection or transformation (not a project source file — e.g. redirecting `git show` output for byte-level inspection, or a throwaway helper script), prefer the `Write` tool over `> file` shell redirection, and prefer `python3 -c "import os; os.remove(path)"` over `rm` to clean it up afterward. Some harness sandboxes statically block plain `>` redirection and `rm` outright — even for files the same session just created inside the working directory — while `Write` and `os.remove` are not pattern-matched the same way. The same blocking applies to scratch **directory trees** (e.g. an isolated tool-home created to work around a lock-file issue): use `python3 -c "import shutil; shutil.rmtree(path)"` instead of `rm -rf`.
+- **Avoid command substitution in Bash tool calls.** Some harnesses' command classifiers reject `$(...)` outright, so a prescribed `--body "$(cat <<'EOF' ... EOF)"` or `git commit -m "$(cat <<'EOF' ... EOF)"` can fail before ever reaching the shell. Compose long bodies (PR comments, commit messages, issue bodies) with the `Write` tool to a scratch file and pass them by file instead — `--body-file` (`gh pr comment`, `gh issue create`) or `-F` (`git commit`) — as done in Phase 4 step 5 and Phase 6. Likewise prefer separate `grep` invocations over `\|` alternation, which some classifiers flag as an expansion.
 
 Write or update tests for every change (and see Stage B in Phase 2 when the *whole cycle* is dedicated to expanding coverage of existing functionality):
 {{TEST_GUIDANCE}}
@@ -320,7 +322,7 @@ Perform a self-review. This step is anchored on external signals ({{EXTERNAL_SIG
 
    If it fails, fix the underlying issue, push, and re-confirm. Do not start the rubric until {{EXTERNAL_SIGNAL_LABEL}} passes.
 
-   **If the anchor cannot run** because the tool/interpreter is absent or broken in the environment (docker not installed; bare `python` resolving to 2.7; a venv-less interpreter with no pytest; `./gradlew` dying on a sandbox file-lock), do **not** claim it green and do **not** burn the cycle trying to fix the sandbox. Flag it **UNVERIFIED** and gate on scope: if the PR modifies files the anchor would have validated, the anchor is required — mark UNVERIFIED, do not auto-merge, and hand to CI/a human with the tool (prefer the CI check on the exact PR head SHA as the real anchor where local execution is blocked). If the PR touches none of those files (e.g. docs-only), record UNVERIFIED-not-applicable and continue, stating it in the self-review and PR body. Capability-check any named interpreter before relying on it (e.g. `<py> -c "import pytest"`) and prefer the project's own venv.
+   **If the anchor cannot run** because the tool/interpreter is absent or broken in the environment (docker not installed; bare `python` resolving to 2.7; a venv-less interpreter with no pytest; `./gradlew` dying on a sandbox file-lock; the session sandbox restricts filesystem/tool access to only the target repo's own working directory — common in gardener-dispatched sessions), do **not** claim it green and do **not** burn the cycle trying to fix the sandbox. Flag it **UNVERIFIED** and gate on scope: if the PR modifies files the anchor would have validated, the anchor is required — mark UNVERIFIED, do not auto-merge, and hand to CI/a human with the tool (prefer the CI check on the exact PR head SHA as the real anchor where local execution is blocked). If the PR touches none of those files (e.g. docs-only), record UNVERIFIED-not-applicable and continue, stating it in the self-review and PR body. Capability-check any named interpreter before relying on it (e.g. `<py> -c "import pytest"`) and prefer the project's own venv.
 
    **Green CI is not verification when CI's scope excludes the changed files.** If this PR changes code the CI structurally cannot execute (platform-specific scripts — `.ps1`/`.bat`/`.command`, installer configs, OS-gated shell paths), a green run does **not** verify those files. State the no-automated-coverage gap in the PR body (and CHANGELOG), lean harder on adversarial hand-review of that code, and recommend a real-platform smoke test before merge — never let a green run on the *other* language imply the script was tested.
 
@@ -355,19 +357,20 @@ Perform a self-review. This step is anchored on external signals ({{EXTERNAL_SIG
    - If the fix is mechanical and small, fix it locally, commit, push, and re-score the failed item. Do not re-score items that previously passed.
    - If the item requires judgment (e.g. "is this scope creep?"), leave it as an inline review comment for Phase 6.
 
-5. **Post the self-review as a plain PR comment** — not a formal review API call. The auto-mode classifier blocks `POST /pulls/<n>/reviews` (it misrepresents independent review); a plain comment keeps the audit trail without implying reviewer independence:
+5. **Post the self-review as a plain PR comment** — not a formal review API call. The auto-mode classifier blocks `POST /pulls/<n>/reviews` (it misrepresents independent review); a plain comment keeps the audit trail without implying reviewer independence. Compose the body with the `Write` tool to a scratch file and pass it by file — **avoid command substitution** (`--body "$(cat <<'EOF' ... EOF)"`), which some harnesses' command classifiers reject outright:
    \`\`\`bash
-   gh pr comment <number> --body "$(cat <<'EOF'
-   Self-review rubric:
-   - Scope: PASS — <justification>
-   - Tests-new: PASS — <justification>
-   - Tests-fix: PASS — stash-and-run confirmed FAIL→PASS
-   - ...
-
-   <one-line summary; fold any out-of-diff observations into this body>
-   EOF
-   )"
+   # write the body (below) to a scratch file with the Write tool first, e.g. <repo-root>/.self-review-scratch.md:
+   #   Self-review rubric:
+   #   - Scope: PASS — <justification>
+   #   - Tests-new: PASS — <justification>
+   #   - Tests-fix: PASS — stash-and-run confirmed FAIL→PASS
+   #   - ...
+   #
+   #   <one-line summary; fold any out-of-diff observations into this body>
+   gh pr comment <number> --body-file <scratch-file-path>
    \`\`\`
+   Remove the scratch file afterward per the scratch-file-handling rule above.
+
    Reserve inline line-anchored comments for lines this PR actually adds/changes — an inline comment on a line **outside the diff hunk** is rejected (`HTTP 422: Line could not be resolved`); fold those observations into the comment **body** instead. Do not retry a 422 with a different line number. Omit inline comments entirely if every rubric item passed after fixes and there are no judgment calls to flag.
 
 6. **Cap: one intrinsic-critique pass per PR.** After Phase 6 addresses the rubric's inline comments, do not re-run the rubric internally. Only an external signal — a new reviewer comment or a {{EXTERNAL_SIGNAL_LABEL}} failure — should re-open the iteration loop. Empirical findings (RESEARCH.md §5) show repeated intrinsic critique plateaus by iteration 2 and can regress.
@@ -401,17 +404,14 @@ For each comment:
 3. If it conflicts with CLAUDE.md, the issue spec, or a project config file,
    reply with the evidence and do not apply the change.
 
-Commit using HEREDOC so the trailer is on its own line. Stage by name (never `git add -A`). **Do not hardcode the co-author model name** — defer to the harness's standing git rule, which appends the *actual running model* (a hardcoded name misattributes the commit when a different model version is running):
+Compose the commit message with the `Write` tool to a scratch file so the trailer lands on its own line, then commit with `-F` — **avoid command substitution** (`git commit -m "$(cat <<'EOF' ... EOF)"`), which some harnesses' command classifiers reject outright. Stage by name (never `git add -A`). **Do not hardcode the co-author model name** — defer to the harness's standing git rule, which appends the *actual running model* (a hardcoded name misattributes the commit when a different model version is running):
 \`\`\`bash
 git add <files>
-git commit -m "$(cat <<'EOF'
-<fix description>
-
-Co-Authored-By: <the actual running model, per the harness git instructions> <noreply@anthropic.com>
-EOF
-)"
+# write the commit message (fix description + blank line + Co-Authored-By trailer) to a scratch file via the Write tool first
+git commit -F <scratch-file-path>
 git push
 \`\`\`
+Remove the scratch file afterward per the scratch-file-handling rule in Phase 3.
 
 {{REVALIDATE_INSTRUCTION}} after every fix. Do not push a broken build.
 
@@ -526,12 +526,13 @@ Return to Phase 1.
 **Tests fail during implementation:** diagnose; never skip or use `--no-verify`.
 **Tests fail after addressing a comment:** same rule.
 **{{EXTERNAL_SIGNAL_LABEL}} fails on the PR (Phase 4 or later):** treat the failing anchor as the highest-priority external signal — fix the underlying cause locally, push, and re-confirm before continuing the rubric or addressing other comments. Do not start or re-run the self-review rubric while {{EXTERNAL_SIGNAL_LABEL}} is failing.
-**The external anchor cannot run (tool/interpreter absent or broken in the sandbox):** do not claim it green and do not iterate on the sandbox. Flag **UNVERIFIED** and gate on scope (Phase 4): anchor-relevant files changed → mark UNVERIFIED + do-not-auto-merge + hand to CI/human (prefer the CI check on the exact head SHA); no anchor-relevant files (docs-only) → record UNVERIFIED-not-applicable and continue, stating it in the PR body.
+**The external anchor cannot run (tool/interpreter absent or broken in the sandbox, or the sandbox restricts filesystem/tool access to only the target repo's own working directory — common in gardener-dispatched sessions):** do not claim it green and do not iterate on the sandbox. Flag **UNVERIFIED** and gate on scope (Phase 4): anchor-relevant files changed → mark UNVERIFIED + do-not-auto-merge + hand to CI/human (prefer the CI check on the exact head SHA); no anchor-relevant files (docs-only) → record UNVERIFIED-not-applicable and continue, stating it in the PR body.
 **An issue requires a harness-blocked operation (editing `CLAUDE.md`/agent-loaded config, registering an external submodule):** recognize it at triage (Phase 1) — surface to the user for explicit authorization rather than attempting it mid-cycle; never remove a path while `CLAUDE.md` still references it.
 **Autonomous multi-cycle batch (`/<loop> until …`):** skip/cap the Phase-5 human-review wait (rubric + green anchor is the gate); still hand off do-not-auto-merge/charter PRs. Stop when only blocked, charter-gated, or too-large work remains, or a cycle yields no scoped work.
 **A concurrent session holds the tree or an open PR:** adopt its PR (bring current with `{{DEFAULT_BRANCH}}`, re-run the anchor, review, merge if green) rather than doing nothing; work in a `git worktree` to avoid colliding, and treat a harmless local `--delete-branch` failure as success once `gh pr view --json state` confirms the merge.
 **A test fails intermittently (suspected flake):** re-run the test command once. If the same test fails again, treat it as a real failure and investigate. If it passes on the second run, note the flake in the PR body and proceed — do not suppress or `@Ignore` a test without understanding why it is flaky.
 **A review comment is a false positive:** reply with evidence, do not apply the change.
+**A `gh` command fails with a transient network/transport error (`http2: client conn could not be established`, `unexpected EOF`):** retry once or twice before treating it as blocked — do not treat the first failure as terminal and silently drop a self-review, commit, or comment.
 **`gh pr create` fails with "you must first push the current branch to a remote" despite a successful `git push -u`:** the clone's fetch refspec may be restricted to the default branch only (common in gardener-managed or otherwise restricted dedicated checkouts) — confirm with `git config --get-all remote.origin.fetch`. A restricted refspec means `git fetch` never populates a remote-tracking ref for feature branches, so `gh pr create`'s and `git branch --set-upstream-to`'s auto-detection both fail even though the push and upstream config succeeded. Pass `--head <branch>` explicitly to `gh pr create` to bypass the remote-tracking-ref lookup rather than retrying the push.
 {{#if REVIEWER}}**Reviewer addition fails:** proceed to the self-review step in Phase 4. Do not skip to Phase 5 without posting self-review comments — Phase 6 addresses those comments like any other review.{{/if}}
 **Branch is behind main or has a merge conflict at Phase 8:** rebase onto main, re-run tests, and force-push before retrying the merge:
