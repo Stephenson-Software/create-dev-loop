@@ -72,3 +72,4 @@ Validate by running `/create-dev-loop` against any real repository you maintain 
 | `CONTRIBUTING.md` | Restated conventions and the validation checklist still match this file (`CLAUDE.md`) |
 | `SECURITY.md` | The trust model still matches what Step 2 of `create-dev-loop.md` actually reads from the target repo |
 | `.github/PULL_REQUEST_TEMPLATE.md` | Doc-sync checkboxes and test-plan guidance match the current CI scope and this file (`CLAUDE.md`) |
+| `.github/ISSUE_TEMPLATE/*.md` | Restated conventions and Step names still match this file (`CLAUDE.md`) |

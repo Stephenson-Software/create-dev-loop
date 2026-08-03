@@ -34,6 +34,17 @@ Running `/create-dev-loop` in any repo runs seven Steps (mapped 1:1 to Steps 1�
 
 The generated skill drives a 10-phase loop: triage → work selection → implementation → PR → review → address comments → doc check → merge → self-audit → repeat.
 
+## Installation
+
+Register `create-dev-loop.md` itself as a slash command by symlinking it into `~/.claude/commands/`:
+
+```
+mkdir -p ~/.claude/commands
+ln -s "$(pwd)/create-dev-loop.md" ~/.claude/commands/create-dev-loop.md
+```
+
+This is a one-time setup step for this repo's own product, distinct from Step 5, which registers each *generated* skill the same way.
+
 ## Usage
 
 ```
