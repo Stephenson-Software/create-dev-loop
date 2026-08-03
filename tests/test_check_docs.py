@@ -2,7 +2,9 @@
 
 Each of check_docs.py's three checks appends to a module-level `errors`
 list rather than returning a value, so these tests reset that list before
-each call and assert on its contents afterward.
+each call and assert on its contents afterward. Any new test class added
+here must do the same in its own setUp() — skipping the reset lets a
+prior test's errors leak into the next assertion.
 """
 import sys
 import unittest
