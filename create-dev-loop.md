@@ -8,6 +8,14 @@ Creates a tailored `dev-loop` Claude skill for the current repository by explori
 
 ## Steps
 
+**Steps at a glance:** [1 — Identify](#1--identify-the-repository) ·
+[2 — Explore](#2--explore-the-repository) ·
+[3 — Write the skill file](#3--write-the-skill-file) ·
+[4 — Fill in the placeholders](#4--fill-in-the-placeholders) ·
+[5 — Register the skill](#5--register-the-skill) ·
+[6 — Create a private GitHub repo](#6--create-a-private-github-repo-for-the-skill) ·
+[7 — Record in a personal catalog](#7--record-the-skill-in-a-personal-catalog-optional)
+
 ### 1 — Identify the repository
 
 Confirm the working directory is inside a git repository:
