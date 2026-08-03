@@ -40,7 +40,7 @@ Register `create-dev-loop.md` itself as a slash command by symlinking it into `~
 
 ```
 mkdir -p ~/.claude/commands
-ln -s "$(pwd)/create-dev-loop.md" ~/.claude/commands/create-dev-loop.md
+ln -sf "$(pwd)/create-dev-loop.md" ~/.claude/commands/create-dev-loop.md
 ```
 
 This is a one-time setup step for this repo's own product, distinct from Step 5, which registers each *generated* skill the same way.
