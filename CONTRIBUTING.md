@@ -54,9 +54,12 @@ contributors:
    on your PR and mechanically checks two of the rules above — every
    `{{placeholder}}` has a substitution-table row, and README's Step list
    stays 1:1 with `create-dev-loop.md` — plus local relative-link checks. It
-   catches doc drift, not behavior. There is no automated behavioral test
-   suite; the real test for behavior is running `/create-dev-loop` against a
-   real repository and confirming:
+   also runs `tests/test_check_docs.py`, fixture-based unit tests of
+   `scripts/check_docs.py` itself, so a silently-broken check can't read as
+   "0 errors → pass"; add cases there when you change that script's logic.
+   CI catches doc drift, not the template's behavior. There is no automated
+   behavioral test suite; the real test for behavior is running
+   `/create-dev-loop` against a real repository and confirming:
    - the generated skill file compiles (no unresolved `{{placeholders}}`
      remain)
    - the slash command link resolves correctly

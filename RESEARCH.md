@@ -16,7 +16,7 @@ This document records the empirical findings that inform the design of `create-d
 - **First-party sources** (Anthropic, OpenAI, vendor research with numbers) count as evidence but must be flagged as first-party so readers can weight them appropriately.
 - **Confidence levels**: `high` = replicated across multiple independent studies; `medium` = one well-cited study, plausible; `low` = single paper, contested, or inferred from adjacent literature.
 
-Last reviewed: 2026-07-29.
+Last reviewed: 2026-08-04.
 
 ---
 

@@ -31,8 +31,10 @@ identity, its reviewer, or its branch prefix. Step 4 also derives from it:
 - **The shell commands the generated skill runs.** `COMPILE_CMD`,
   `TEST_CMD`, `LINT_CMD`, and `EXTERNAL_SIGNAL_CMD` are taken from the
   target repo's build files and CI workflows, and the generated skill
-  executes them verbatim — in its Phase 3 build-verification step and its
-  Phase 4 external-signal anchor.
+  executes them verbatim — in its Phase 3 build-verification step, its
+  Phase 4 external-signal anchor, and its Phase 8 post-rebase re-check.
+  `REVALIDATE_INSTRUCTION`, derived from the same sources, points Phase 6
+  at that same check after every review fix.
 - **Which paths are exempt from autonomous merge.** `DO_NOT_AUTO_MERGE`
   adds to the paths the generated skill refuses to merge without a human.
   It can only widen that list — a universal baseline (`.github/workflows/*`,
