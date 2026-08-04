@@ -1,6 +1,6 @@
 # create-dev-loop
 
-[![CI](https://github.com/dmccoystephenson/create-dev-loop/actions/workflows/ci.yml/badge.svg)](https://github.com/dmccoystephenson/create-dev-loop/actions/workflows/ci.yml)
+[![CI](https://github.com/Stephenson-Software/create-dev-loop/actions/workflows/ci.yml/badge.svg)](https://github.com/Stephenson-Software/create-dev-loop/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
 
 A Claude Code skill that generates a **tailored autonomous dev loop** for any git repository — one slash command away from continuous, repo-aware development.
@@ -84,7 +84,7 @@ Each generated `<slug>-dev-loop` skill encodes:
 A generated skill is invoked interactively, one repo at a time, as
 `/<slug>-dev-loop`. To run them unattended across a whole fleet of repos —
 on a schedule, with safety gating and a merge allow-list — see
-[`gardener`](https://github.com/dmccoystephenson/gardener), this project's
+[`gardener`](https://github.com/Stephenson-Software/gardener), this project's
 open-source companion. `gardener tend` dispatches a repo's generated skill
 headlessly and bootstraps one via `/create-dev-loop` if the repo doesn't
 have one yet; `gardener overnight` does that across an opt-in list of repos

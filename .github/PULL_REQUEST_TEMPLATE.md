@@ -24,8 +24,10 @@ touch the template (e.g. docs-only).
 <!--
 CI (.github/workflows/ci.yml) runs scripts/check_docs.py on every PR and
 mechanically checks the first two Doc sync boxes above, plus relative links
-between the repo's own docs. It catches doc drift, not behavior. There is no
-automated behavioral test suite, so describe how you validated the change —
+between the repo's own docs. It then runs tests/test_check_docs.py, the unit
+tests for that script — add cases there if you changed its logic. CI catches
+doc drift, not the template's behavior. There is no automated behavioral test
+suite, so describe how you validated the change —
 see CLAUDE.md's "Testing changes" section (running /create-dev-loop against
 a real repo and checking the generated skill compiles, MODE=update behaves
 correctly, etc.).
