@@ -83,7 +83,7 @@ Read the following files if they exist (skip silently if absent):
 
 **Issue and PR patterns**
 - `.github/CODEOWNERS` — who reviews PRs
-- `.github/pull_request_template.md` — PR body requirements
+- The PR template — PR body requirements. GitHub accepts several spellings and locations, and on a case-sensitive filesystem only the exact one present will match, so check for each: `PULL_REQUEST_TEMPLATE.md` or `pull_request_template.md`, in `.github/`, the repo root, or `docs/`; plus a `.github/PULL_REQUEST_TEMPLATE/` directory when the repo offers multiple templates
 - Recent closed PRs: `gh pr list --state closed --limit 5` — infer title style, squash vs merge, reviewer patterns
 
 **Code conventions**
