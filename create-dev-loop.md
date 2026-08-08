@@ -83,7 +83,7 @@ Read the following files if they exist (skip silently if absent):
 
 **Issue and PR patterns**
 - `.github/CODEOWNERS` — who reviews PRs
-- `.github/PULL_REQUEST_TEMPLATE.md` or `.github/pull_request_template.md` (either spelling is also accepted at the repo root or under `docs/`, and a `.github/PULL_REQUEST_TEMPLATE/` directory holds a repo's multiple templates) — PR body requirements. On a case-sensitive filesystem only the exact spelling present will match, so check each rather than the lowercase `.github/` path alone
+- `.github/PULL_REQUEST_TEMPLATE.md`, `.github/pull_request_template.md`, `PULL_REQUEST_TEMPLATE.md`, `pull_request_template.md`, `docs/PULL_REQUEST_TEMPLATE.md`, `docs/pull_request_template.md` (GitHub accepts any of these spellings and locations; a `.github/PULL_REQUEST_TEMPLATE/` directory holds a repo's multiple templates) — PR body requirements. On a case-sensitive filesystem only the exact spelling present will match, so check each path rather than assuming a single location
 - Recent closed PRs: `gh pr list --state closed --limit 5` — infer title style, squash vs merge, reviewer patterns
 
 **Code conventions**
