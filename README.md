@@ -12,7 +12,7 @@ Generic AI coding assistants treat every repo the same. A tailored dev loop enco
 | Generic assistant | Tailored dev loop |
 |---|---|
 | Guesses your test command | Knows `./mvnw test` vs `cargo test` vs `pytest` |
-| Ignores your PR template | Fills it in from `.github/pull_request_template.md` |
+| Ignores your PR template | Fills it in from your PR template, whichever spelling and location it uses |
 | Doesn't know your branch convention | Enforces `feature/` or `fix/` based on your `CONTRIBUTING.md` |
 | Skips your linter | Runs `ruff check` / `eslint` / `golangci-lint` before every push |
 | Opens PRs with placeholder reviewers | Requests the right person from `CODEOWNERS` or adds `Copilot` |
