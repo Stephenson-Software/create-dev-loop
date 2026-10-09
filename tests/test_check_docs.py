@@ -65,6 +65,48 @@ class CheckPlaceholdersTests(unittest.TestCase):
         check_docs.check_placeholders("no such section here", "{{NAME}}")
         self.assertTrue(any("Fill in the placeholders" in e for e in check_docs.errors))
 
+    def test_undeclared_conditional_flag_errors(self):
+        body = "{{#if FLAG}}shown{{/if}}"
+        text = self._table("NAME")
+        check_docs.check_placeholders(text, body)
+        self.assertEqual(len(check_docs.errors), 1)
+        self.assertIn("{{FLAG}}", check_docs.errors[0])
+        self.assertNotIn("/if", check_docs.errors[0])
+
+    def test_row_after_step4_section_does_not_count(self):
+        body = "{{NAME}} {{LATER}}"
+        text = self._table("NAME") + "\n| `LATER` | ... |\n"
+        check_docs.check_placeholders(text, body)
+        self.assertEqual(len(check_docs.errors), 1)
+        self.assertIn("{{LATER}}", check_docs.errors[0])
+
+    def test_table_section_at_end_of_file_is_read(self):
+        body = "{{NAME}}"
+        text = "### 4 — Fill in the placeholders\n\n| `NAME` | ... |\n"
+        check_docs.check_placeholders(text, body)
+        self.assertEqual(check_docs.errors, [])
+
+    def test_multiple_missing_reported_sorted_in_one_error(self):
+        body = "{{ZED}} {{ALPHA}}"
+        text = self._table("NAME")
+        check_docs.check_placeholders(text, body)
+        self.assertEqual(len(check_docs.errors), 1)
+        self.assertIn("{{ALPHA}}, {{ZED}}", check_docs.errors[0])
+
+    def test_whitespace_inside_braces_is_trimmed(self):
+        body = "{{ NAME }} {{#if  FLAG }}x{{ /if }}"
+        text = self._table("NAME", "FLAG")
+        check_docs.check_placeholders(text, body)
+        self.assertEqual(check_docs.errors, [])
+
+    def test_unused_table_row_is_not_reported(self):
+        # Characterizes current behavior: only the template -> table direction
+        # is enforced; a row for a placeholder the template no longer uses passes.
+        body = "{{NAME}}"
+        text = self._table("NAME", "UNUSED")
+        check_docs.check_placeholders(text, body)
+        self.assertEqual(check_docs.errors, [])
+
 
 class CheckReadmeStepsSyncTests(unittest.TestCase):
     def setUp(self):
