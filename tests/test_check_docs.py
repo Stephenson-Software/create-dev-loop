@@ -129,6 +129,51 @@ class CheckReadmeStepsSyncTests(unittest.TestCase):
         check_docs.check_readme_steps_sync("### 1 — Identify\n...", "## Usage\nno such section\n")
         self.assertTrue(any("What it does" in e for e in check_docs.errors))
 
+    def test_items_after_next_section_do_not_count(self):
+        cdl_text = "### 1 — Identify\n...\n### 2 — Explore\n..."
+        readme_text = "## What it does\n1. **Identify**\n\n## Usage\n2. **Explore**\n"
+        check_docs.check_readme_steps_sync(cdl_text, readme_text)
+        self.assertEqual(len(check_docs.errors), 1)
+        self.assertIn("([1])", check_docs.errors[0])
+        self.assertIn("([1, 2])", check_docs.errors[0])
+
+    def test_section_at_end_of_file_is_read(self):
+        cdl_text = "### 1 — Identify\n...\n### 2 — Explore\n..."
+        readme_text = "## What it does\n1. **Identify**\n2. **Explore**\n"
+        check_docs.check_readme_steps_sync(cdl_text, readme_text)
+        self.assertEqual(check_docs.errors, [])
+
+    def test_order_is_not_enforced(self):
+        # Characterizes current behavior: both lists are sorted before comparing,
+        # so README items listed out of order still pass.
+        cdl_text = "### 1 — Identify\n...\n### 2 — Explore\n..."
+        readme_text = "## What it does\n2. **Explore**\n1. **Identify**\n"
+        check_docs.check_readme_steps_sync(cdl_text, readme_text)
+        self.assertEqual(check_docs.errors, [])
+
+    def test_duplicate_readme_number_errors(self):
+        cdl_text = "### 1 — Identify\n..."
+        readme_text = "## What it does\n1. **Identify**\n1. **Identify again**\n"
+        check_docs.check_readme_steps_sync(cdl_text, readme_text)
+        self.assertEqual(len(check_docs.errors), 1)
+        self.assertIn("([1, 1])", check_docs.errors[0])
+
+    def test_non_bold_list_items_are_not_counted(self):
+        cdl_text = "### 1 — Identify\n..."
+        readme_text = "## What it does\n1. Identify, without bold\n"
+        check_docs.check_readme_steps_sync(cdl_text, readme_text)
+        self.assertEqual(len(check_docs.errors), 1)
+        self.assertIn("([])", check_docs.errors[0])
+
+    def test_step_heading_without_em_dash_is_not_counted(self):
+        # Characterizes current behavior: only "### N — " headings are Steps,
+        # so a hyphen-separated heading is invisible to the check.
+        cdl_text = "### 1 — Identify\n...\n### 2 - Explore\n..."
+        readme_text = "## What it does\n1. **Identify**\n2. **Explore**\n"
+        check_docs.check_readme_steps_sync(cdl_text, readme_text)
+        self.assertEqual(len(check_docs.errors), 1)
+        self.assertIn("Steps ([1])", check_docs.errors[0])
+
 
 class CheckLocalLinksTests(unittest.TestCase):
     def setUp(self):
