@@ -214,6 +214,81 @@ class CheckLocalLinksTests(unittest.TestCase):
             check_docs.check_local_links()
             self.assertEqual(check_docs.errors, [])
 
+    def test_fragment_is_stripped_before_resolving(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "TARGET.md").write_text("target")
+            (root / "SOURCE.md").write_text("[link](TARGET.md#some-section)")
+            check_docs.REPO_ROOT = root
+            check_docs.check_local_links()
+            self.assertEqual(check_docs.errors, [])
+
+    def test_broken_link_error_names_doc_and_full_target(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "SOURCE.md").write_text("[link](MISSING.md#section)")
+            check_docs.REPO_ROOT = root
+            check_docs.check_local_links()
+            self.assertEqual(check_docs.errors, ["SOURCE.md: broken relative link -> MISSING.md#section"])
+
+    def test_link_resolves_relative_to_containing_doc(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "docs").mkdir()
+            (root / "TARGET.md").write_text("target")
+            (root / "docs" / "UP.md").write_text("[link](../TARGET.md)")
+            (root / "docs" / "SAME.md").write_text("[link](TARGET.md)")
+            check_docs.REPO_ROOT = root
+            check_docs.check_local_links()
+            self.assertEqual(check_docs.errors, ["SAME.md: broken relative link -> TARGET.md"])
+
+    def test_docs_under_dot_git_are_skipped(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".git").mkdir()
+            (root / ".git" / "NOTES.md").write_text("[link](DOES_NOT_EXIST.md)")
+            check_docs.REPO_ROOT = root
+            check_docs.check_local_links()
+            self.assertEqual(check_docs.errors, [])
+
+    def test_link_to_existing_directory_passes(self):
+        # Characterizes current behavior: the check uses exists(), not
+        # is_file(), so a link to a directory counts as resolving.
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "scripts").mkdir()
+            (root / "SOURCE.md").write_text("[dir](scripts)")
+            check_docs.REPO_ROOT = root
+            check_docs.check_local_links()
+            self.assertEqual(check_docs.errors, [])
+
+    def test_image_links_are_checked(self):
+        # Characterizes current behavior: the link regex also matches
+        # ![alt](path) image syntax, so a missing image is reported.
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "SOURCE.md").write_text("![diagram](missing.png)")
+            check_docs.REPO_ROOT = root
+            check_docs.check_local_links()
+            self.assertEqual(check_docs.errors, ["SOURCE.md: broken relative link -> missing.png"])
+
+    def test_every_broken_link_is_reported(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "SOURCE.md").write_text("[a](A.md) and [b](B.md)")
+            check_docs.REPO_ROOT = root
+            check_docs.check_local_links()
+            self.assertEqual(len(check_docs.errors), 2)
+            self.assertTrue(any("-> A.md" in e for e in check_docs.errors))
+            self.assertTrue(any("-> B.md" in e for e in check_docs.errors))
+
 
 if __name__ == "__main__":
     unittest.main()
