@@ -33,6 +33,40 @@ class ExtractTemplateBodyTests(unittest.TestCase):
         self.assertEqual(body, "")
         self.assertTrue(any("closing" in e for e in check_docs.errors))
 
+    def test_escaped_inner_fences_do_not_close_template(self):
+        text = "```markdown\nbefore\n\\`\\`\\`bash\nls\n\\`\\`\\`\nafter\n```\ntrailing"
+        self.assertEqual(
+            check_docs.extract_template_body(text),
+            "before\n\\`\\`\\`bash\nls\n\\`\\`\\`\nafter",
+        )
+        self.assertEqual(check_docs.errors, [])
+
+    def test_fence_with_info_string_does_not_close_template(self):
+        text = "```markdown\nbefore\n```bash\nafter\n```"
+        self.assertEqual(check_docs.extract_template_body(text), "before\n```bash\nafter")
+
+    def test_indented_fence_does_not_close_template(self):
+        # Characterizes current behavior: the closing fence must be exactly
+        # "```" at column 0, so an indented fence is part of the body.
+        text = "```markdown\nbefore\n  ```\nafter\n```"
+        self.assertEqual(check_docs.extract_template_body(text), "before\n  ```\nafter")
+
+    def test_opening_fence_tolerates_surrounding_whitespace(self):
+        # Characterizes current behavior: the opening line is strip()ped
+        # before comparison, unlike the closing line.
+        text = "  ```markdown  \nbody\n```"
+        self.assertEqual(check_docs.extract_template_body(text), "body")
+        self.assertEqual(check_docs.errors, [])
+
+    def test_closing_fence_with_trailing_whitespace_is_not_recognized(self):
+        body = check_docs.extract_template_body("```markdown\nbody\n```   ")
+        self.assertEqual(body, "")
+        self.assertTrue(any("closing" in e for e in check_docs.errors))
+
+    def test_first_markdown_fence_is_used(self):
+        text = "```markdown\nfirst\n```\n```markdown\nsecond\n```"
+        self.assertEqual(check_docs.extract_template_body(text), "first")
+
 
 class CheckPlaceholdersTests(unittest.TestCase):
     def setUp(self):
@@ -289,6 +323,63 @@ class CheckLocalLinksTests(unittest.TestCase):
             self.assertTrue(any("-> A.md" in e for e in check_docs.errors))
             self.assertTrue(any("-> B.md" in e for e in check_docs.errors))
 
+
+class MainTests(unittest.TestCase):
+    def setUp(self):
+        check_docs.errors = []
+        self._orig = (check_docs.REPO_ROOT, check_docs.TEMPLATE_FILE, check_docs.README_FILE)
+
+    def tearDown(self):
+        check_docs.REPO_ROOT, check_docs.TEMPLATE_FILE, check_docs.README_FILE = self._orig
+
+    def _run(self, root, cdl_text, readme_text):
+        import contextlib
+        import io
+        (root / "create-dev-loop.md").write_text(cdl_text)
+        (root / "README.md").write_text(readme_text)
+        check_docs.REPO_ROOT = root
+        check_docs.TEMPLATE_FILE = root / "create-dev-loop.md"
+        check_docs.README_FILE = root / "README.md"
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = check_docs.main()
+        return code, out.getvalue()
+
+    _CDL = (
+        "### 3 — Write\n\n```markdown\nHello {{NAME}}\n```\n\n"
+        "### 4 — Fill in the placeholders\n\n| `NAME` | ... |\n"
+    )
+
+    def test_consistent_docs_exit_zero(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            code, out = self._run(Path(tmp), self._CDL, "## What it does\n3. **Write**\n4. **Fill**\n")
+            self.assertEqual(code, 0)
+            self.assertIn("Doc consistency check passed.", out)
+            self.assertEqual(check_docs.errors, [])
+
+    def test_every_failure_is_printed_and_exit_is_one(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            cdl = self._CDL.replace("Hello {{NAME}}", "Hello {{NAME}} {{MISSING}}") + "[x](GONE.md)\n"
+            code, out = self._run(Path(tmp), cdl, "## What it does\n3. **Write**\n")
+            self.assertEqual(code, 1)
+            self.assertIn("Doc consistency check FAILED:", out)
+            self.assertIn("{{MISSING}}", out)
+            self.assertIn("out of sync", out)
+            self.assertIn("broken relative link -> GONE.md", out)
+            self.assertEqual(len(check_docs.errors), 3)
+
+    def test_missing_template_fence_skips_placeholder_check(self):
+        # Characterizes current behavior: with no template body, the
+        # placeholder check is not run, so only the fence error is reported.
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            cdl = "### 3 — Write\n\nno fence, {{MISSING}}\n"
+            code, out = self._run(Path(tmp), cdl, "## What it does\n3. **Write**\n")
+            self.assertEqual(code, 1)
+            self.assertEqual(len(check_docs.errors), 1)
+            self.assertIn("opens the generated-skill template", check_docs.errors[0])
 
 if __name__ == "__main__":
     unittest.main()
