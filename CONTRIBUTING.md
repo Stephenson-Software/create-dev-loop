@@ -28,6 +28,13 @@ contributors:
   skills reference them by number.
 - Every `{{placeholder}}` in the template needs a corresponding row in the
   Step 4 substitution table.
+- Fenced code blocks inside the template are escaped with a leading
+  backslash on the triple backtick (`` \``` ``) so they survive being
+  embedded inside the outer markdown code block in `create-dev-loop.md`.
+- Every generated skill carries `<!-- template-version: <sha> -->` and
+  `<!-- generated-at: <iso8601> -->` HTML comments placed **directly below**
+  its `# <slug>-dev-loop` H1 heading, never above it — so a commands-format
+  install shows the description, not the comment, as the skill-list line.
 - `README.md`'s "What it does" list must stay 1:1 with the Steps in
   `create-dev-loop.md` — update both in the same PR.
 - If your change implements or contradicts a finding in `RESEARCH.md`,
@@ -64,9 +71,12 @@ contributors:
      remain)
    - the slash command link resolves correctly
    - the reported summary accurately reflects the target repo
-   - the `<!-- template-version -->` / `<!-- generated-at -->` HTML comments
-     appear correctly
-   - if you touched update-mode behavior, exercise `MODE=update` end-to-end
+   - the `<!-- template-version: <sha> -->` / `<!-- generated-at: <iso8601> -->`
+     HTML comments appear directly below the H1 heading, with the SHA
+     matching the create-dev-loop commit you generated from
+   - if the target repo already has a skill, exercise `MODE=update`
+     end-to-end: confirm the abort-on-uncommitted-changes check, the
+     pre-overwrite diff prompt, and that Steps 6–7 are correctly skipped
 
    Any real project you maintain works as a fixture. Prefer a low-stakes
    one the first time — Step 6 creates a GitHub repo, and Steps 3 and 5
