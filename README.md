@@ -25,7 +25,7 @@ When Claude knows your build system, test suite, doc sources, and reviewer patte
 Running `/create-dev-loop` in any repo runs seven Steps (mapped 1:1 to Steps 1–7 of `create-dev-loop.md`):
 
 1. **Identify** the repository — confirms a git toplevel, derives the slug, checks whether a skill already exists and (if so) asks **update** / **overwrite** / **cancel**
-2. **Explore** — reads `CLAUDE.md`, `CONTRIBUTING.md`, CI workflows, build files, linter configs, recent PRs, and `CODEOWNERS` to compile a repo-specific profile (build/test commands, branch prefix, reviewer, doc sources, code patterns)
+2. **Explore** — reads `CLAUDE.md`, `CONTRIBUTING.md`, `README.md`, CI workflows, build files, linter and formatter configs, documentation sources, the PR template, recent commits and PRs, and `CODEOWNERS` to compile a repo-specific profile (build/test commands, branch prefix, reviewer, doc sources, code patterns)
 3. **Write** the skill file at `~/local-skills/<slug>-dev-loop/<slug>-dev-loop.md` from the template, with `<!-- template-version: <sha> -->` and `<!-- generated-at: <iso8601> -->` HTML comments just below the heading so future cycles can detect drift against the template
 4. **Fill in placeholders** — substitutes every `{{PLACEHOLDER}}` and `{{#if FLAG}}` token from Step 2's findings, using the Step 4 substitution table as the contract
 5. **Register** it as a slash command at `~/.claude/commands/<slug>-dev-loop.md`
@@ -69,11 +69,14 @@ The skill reports the command name and a summary of the choices made (build syst
 
 Each generated `<slug>-dev-loop` skill encodes:
 
+- **Identity** — a one-sentence statement of what the skill optimizes for in this repo, naming the failure mode it actively rejects, inferred from `CLAUDE.md`, `CONTRIBUTING.md`, and recent PRs
 - **Build & test commands** — exact commands from CI or build files, not guesses; repos with no build system or no test suite get the project's real validation steps in their place, not an invented command
 - **Branch naming** — from `CONTRIBUTING.md` or inferred from recent branches
 - **Reviewer** — from `CODEOWNERS`, recent PR reviewers, or `@copilot` if Copilot code review is configured (the bare `Copilot` login does not resolve)
+- **Test guidance** — the test framework, naming convention, file location, and fake/mock patterns new tests must follow
 - **Lint/format step** — only if present in CI; omitted otherwise
 - **External signal anchor** — the objective check the self-review must be green against: CI where the repo has workflows, otherwise a manual-validation checklist or whatever else the project actually verifies against
+- **Self-review rubric** — repo-specific yes/no items added to the universal Phase 4 rubric, each answerable from the diff or a command output; omitted when the universal items already cover the repo's invariants
 - **Documentation sources** — every doc file that can drift from the implementation
 - **Scan checklist** — repo-specific anti-patterns from `CLAUDE.md` plus universal ones
 - **Code patterns** — conventions from `CLAUDE.md` encoded directly into Phase 3
