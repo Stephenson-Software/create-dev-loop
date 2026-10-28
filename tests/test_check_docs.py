@@ -277,7 +277,18 @@ class CheckLocalLinksTests(unittest.TestCase):
             (root / "docs" / "SAME.md").write_text("[link](TARGET.md)")
             check_docs.REPO_ROOT = root
             check_docs.check_local_links()
-            self.assertEqual(check_docs.errors, ["SAME.md: broken relative link -> TARGET.md"])
+            self.assertEqual(check_docs.errors, ["docs/SAME.md: broken relative link -> TARGET.md"])
+
+    def test_same_named_docs_are_told_apart_by_path(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "scripts").mkdir()
+            (root / "README.md").write_text("no links here")
+            (root / "scripts" / "README.md").write_text("[link](MISSING.md)")
+            check_docs.REPO_ROOT = root
+            check_docs.check_local_links()
+            self.assertEqual(check_docs.errors, ["scripts/README.md: broken relative link -> MISSING.md"])
 
     def test_docs_under_dot_git_are_skipped(self):
         import tempfile
