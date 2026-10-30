@@ -109,7 +109,7 @@ def check_local_links() -> None:
                 continue
             resolved = (doc.parent / path_part).resolve()
             if not resolved.exists():
-                errors.append(f"{doc.name}: broken relative link -> {target}")
+                errors.append(f"{doc.relative_to(REPO_ROOT).as_posix()}: broken relative link -> {target}")
 
 
 def main() -> int:
