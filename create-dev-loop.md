@@ -645,7 +645,7 @@ Use findings from Step 2 to substitute each `{{placeholder}}`. The table below c
 | `CLAUDE_MD` | True if `CLAUDE.md` exists in the repo root (`ls CLAUDE.md 2>/dev/null`); controls whether the "Project guidance" line appears in the skill header |
 | `SELF_REVIEW_RUBRIC` | Repo-specific objective yes/no rubric items for the Phase 4 self-review. Each item must be answerable from the diff or a command output, not from judgment. Add items only when the repo has anti-patterns or invariants not already covered by the universal items in Phase 4. Examples: "Every `@Override` matches a real superclass method" (Java); "No `console.log` in committed code" (JS); "Every new permission appears in `plugin.yml`" (Bukkit plugin). Format as one indented Markdown bullet per item: `   - **<short-name>:** <objective condition>`. Omit the conditional block entirely if no repo-specific items apply. |
 | `DO_NOT_AUTO_MERGE` | Repo-specific paths that require human review before merge (in addition to the universal entries in Phase 8). Common entries: `plugin.yml` (Bukkit plugins), `pom.xml` (Maven projects), `Cargo.toml` (Rust), `package.json` (Node), the project's main config or schema file. Format as one Markdown bullet per entry, with backticks around the path or glob and a brief rationale after an em-dash. Omit the conditional block entirely if no repo-specific entries apply. |
-| `TEMPLATE_VERSION` | Short commit SHA of the `create-dev-loop` repo at generation time. Capture with `git -C <path-to-create-dev-loop> rev-parse --short HEAD`. Becomes part of an HTML comment at the top of the generated skill so future cycles can detect template drift. |
+| `TEMPLATE_VERSION` | Short commit SHA of the `create-dev-loop` repo at generation time. Capture with `git -C <path-to-create-dev-loop> rev-parse --short HEAD`. Becomes part of an HTML comment directly below the H1 heading of the generated skill so future cycles can detect template drift. |
 | `GENERATED_AT` | ISO-8601 UTC timestamp at generation time. Capture with `date -u +%Y-%m-%dT%H:%M:%SZ`. Pairs with `TEMPLATE_VERSION` in the HTML-comment header. |
 
 **When the repo has no build system or no automated test suite**, `COMPILE_CMD`, `TEST_CMD`, `REVALIDATE_INSTRUCTION`, `VALIDATION_NOTE`, and `EXTERNAL_SIGNAL_CMD` must all name the *same* check — whatever the project actually gates correctness on. Also reword the Phase 3 "Confirm the anchor actually executed tests" rule and the Edge cases entries that name tests — "Tests fail during implementation", "Tests fail after addressing a comment", "A test fails intermittently", and the post-rebase verification step of "Branch is behind main or has a merge conflict at Phase 8" — so they refer to that check rather than a test suite (an "executed-test count from `# re-run the manual checklist`" is not a sentence a generated skill should carry); keep the entry order, wording of the surrounding rules, and phase numbers unchanged.
@@ -685,21 +685,27 @@ repo-specific choices made (build system, test command, doc sources, reviewer, b
 
 **Skip this step if `MODE=update`** — the repo already exists from the initial generation. (Run only when `MODE=fresh` or `MODE=overwrite`.)
 
+Every command in this step is safe to re-run: under `MODE=overwrite` the repo, remote, and labels already exist, so each is re-asserted rather than created a second time.
+
 ```bash
-gh repo create <slug>-dev-loop --private --description "Autonomous dev loop skill for {{PROJECT_NAME}}"
+gh repo view "$(gh api user -q .login)/<slug>-dev-loop" >/dev/null 2>&1 || \
+  gh repo create <slug>-dev-loop --private --description "Autonomous dev loop skill for {{PROJECT_NAME}}"
 ```
 
-Initialize the local skill directory as a git repo, commit the skill file, and push:
+Initialize the local skill directory as a git repo, commit the skill file, and push. Use the commit message `Initial commit: <slug>-dev-loop skill` when `MODE=fresh` and `Regenerate <slug>-dev-loop skill` when `MODE=overwrite`. An existing `origin` is left as it is, so a skill repo that has since been transferred or renamed keeps its working remote. The commit is skipped when the regenerated file is unchanged.
 
 ```bash
 cd ~/local-skills/<slug>-dev-loop
 git init
 git branch -m main
-git remote add origin https://github.com/$(gh api user -q .login)/<slug>-dev-loop.git
+git remote get-url origin >/dev/null 2>&1 || \
+  git remote add origin https://github.com/$(gh api user -q .login)/<slug>-dev-loop.git
 git add <slug>-dev-loop.md
-git commit -m "Initial commit: <slug>-dev-loop skill"
+git diff --cached --quiet || git commit -m "<commit message for this MODE>"
 git push -u origin main
 ```
+
+If the push is rejected, stop and report it — the remote has history this directory does not. Never force-push over it.
 
 The GitHub repo serves as the issue tracker for self-audit findings. When the generated skill's Phase 9 says "file issues there for human review", issues go here.
 
@@ -714,7 +720,7 @@ for entry in \
   "research-gap:B60205:New finding worth a RESEARCH.md entry" \
   "process:CFD3D7:Meta-issue about how the loop runs"; do
   IFS=: read -r name color desc <<< "$entry"
-  gh label create "$name" --color "$color" --description "$desc" --repo "$OWNER/<slug>-dev-loop"
+  gh label create "$name" --force --color "$color" --description "$desc" --repo "$OWNER/<slug>-dev-loop"
 done
 ```
 
@@ -732,18 +738,18 @@ Some users keep a personal catalog repo listing every skill they have and where 
 
 **If absent** (unset, or set to something that isn't a git repo), skip this step silently — it is not required for the generated skill to work (Step 5 already registered the slash command). Do not create the directory or repo on the user's behalf, and do not guess at a catalog location.
 
-**If present**, open `$CLAUDE_SKILLS_CATALOG/README.md` and append a new row to its skills table using the GitHub repo created in Step 6 (`OWNER=$(gh api user -q .login)`, same as Step 6). Match the existing table's column order rather than assuming this one:
+**If present**, open `$CLAUDE_SKILLS_CATALOG/README.md` and add a row to its skills table using the GitHub repo from Step 6 (`OWNER=$(gh api user -q .login)`, same as Step 6). If a row for `<slug>-dev-loop` already exists, replace that row in place rather than appending a duplicate. Match the existing table's column order rather than assuming this one:
 
 ```
 | <slug>-dev-loop | `/<slug>-dev-loop` | [$OWNER/<slug>-dev-loop](https://github.com/$OWNER/<slug>-dev-loop) | Autonomous dev loop for {{PROJECT_NAME}} |
 ```
 
-Then commit and push:
+Then commit and push, skipping the commit when an existing row already matched:
 
 ```bash
 cd "$CLAUDE_SKILLS_CATALOG"
 git add README.md
-git commit -m "Add <slug>-dev-loop skill"
+git diff --cached --quiet || git commit -m "Add <slug>-dev-loop skill"
 git push
 ```
 
