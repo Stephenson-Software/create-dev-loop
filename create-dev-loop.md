@@ -421,7 +421,7 @@ gh pr view <number> --comments
 gh pr view <number> --json reviews
 \`\`\`
 
-These show conversation comments and each review's state and summary, but not the text or `path:line` anchor of inline review comments. Where the summary names the findings, Phase 6 can work from it. Where the harness allows it, this read fills the gap: `gh api repos/{{GITHUB_OWNER}}/{{GITHUB_REPO}}/pulls/<number>/comments --jq '.[] | "\(.path):\(.line) — \(.body)"'`. A command allow-list or attribution hook can refuse it even though it only reads. **A refusal, or an empty `--comments` result, is never evidence that no review comments exist** — check `--json reviews` for a submitted review before concluding there is nothing to address.
+These show conversation comments and each review's state and summary, but not the text or `path:line` anchor of inline review comments. Where the summary names the findings, Phase 6 can work from it. Where the harness allows it, this read fills the gap: `gh api repos/{{GITHUB_OWNER}}/{{GITHUB_REPO}}/pulls/<number>/comments --jq '.[] | "\(.path):\(.line) — \(.body)"'`. A command allow-list or attribution hook can refuse it even though it only reads. **A refusal, or an empty `--comments` result, is never evidence that no review comments exist** — check `--json reviews` for a submitted review before concluding there is nothing to address. If a review reports findings that can be read in neither its summary nor the inline comments, do not merge: leave the PR open and hand off, naming the review whose findings could not be read.
 
 If no review yet, use `ScheduleWakeup` (delay 270 s) to check again.
 After 5 wakeups (~22 min) with no review, proceed anyway.
