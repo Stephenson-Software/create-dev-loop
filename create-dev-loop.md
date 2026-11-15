@@ -185,6 +185,8 @@ gh run list --workflow <workflow-file> --branch {{DEFAULT_BRANCH}} --limit 50 --
 \`\`\`
 If a required workflow shows no successful run in its whole recorded history on `{{DEFAULT_BRANCH}}`, record the repo as **structurally red** for that workflow, together with the cause (absent credentials, an unset secret, an unavailable license) and any issue tracking it. This is a fact about the repository, not about the change — establishing it once at triage is what lets Phase 4 assess per-job signal and Phase 8 name the blocking condition, instead of rediscovering it at the merge gate every cycle.
 
+**Check whether `{{DEFAULT_BRANCH}}` is red right now.** A workflow that succeeds routinely can still be failing at the moment, and the structurally-red check above does not catch that, because the workflow *has* passed before. Read the most recent run of each required workflow in the same `gh run list --branch {{DEFAULT_BRANCH}}` output. If the latest run of a required check on `{{DEFAULT_BRANCH}}` failed, that breakage is this cycle's work and outranks the open-issue backlog. While it stands, every PR inherits the red check, so the Phase 4 external anchor says nothing about the change under review. Before editing anything, run the Phase 3 verify commands once on an unmodified `{{DEFAULT_BRANCH}}` as a baseline, even when `{{DEFAULT_BRANCH}}` is green. A failure first seen after editing cannot be told apart from one the edit caused, and the cycle will spend turns proving it did not.
+
 **Close stale-open issues first.** Check whether any open issues were resolved by
 recent PRs but not yet closed. Cross-reference `git log` against open issue titles:
 \`\`\`bash
