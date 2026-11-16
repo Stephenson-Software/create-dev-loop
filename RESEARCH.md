@@ -186,6 +186,7 @@ Last reviewed: 2026-08-04.
 
 **Implementations.**
 - PR #29 (Bias triage and batching toward higher-merge-rate issue types): shipped 2026-05-25. Observed effect: pending — needs N cycles of data. Adds a Phase 1 "Record skip reasons" instruction so triage decisions are auditable rather than silent. Does not yet address the deeper "use triage for batching coherence, not value judgment" implication beyond the existing 0–3 issue coherent-batch ceiling.
+- PR #179 (Verify forward issue references in Phase 4 before pushing): shipped date pending merge. Observed effect: pending — needs N cycles of data. Extends the auditability of skip reasons: a follow-up issue a PR body promises must be filed before the body is written and cited by number, and every `#N` the body mentions is checked with `gh issue view`, so a deferral cannot point at an issue that was never filed.
 
 ---
 
