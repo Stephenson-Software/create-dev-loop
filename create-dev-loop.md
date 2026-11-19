@@ -107,7 +107,6 @@ Compile findings into these answers before writing the skill:
 | What are the documentation sources of truth? | CLAUDE.md; otherwise infer from doc files present |
 | Are there specific code patterns to follow? | CLAUDE.md; otherwise infer from source |
 | Who reviews PRs? | CODEOWNERS; recent PR reviewers via `gh pr list --state closed` |
-| Is there a Copilot reviewer configured? | `gh pr list --state closed --json reviews` |
 | What permission/config system is used? | Language-specific (plugin.yml, manifest, etc.) |
 | Is there a changelog convention? | CHANGELOG.md format (Keep a Changelog, etc.) |
 | What status check must pass before merge? | CI workflow name + job name |
@@ -642,7 +641,7 @@ Use findings from Step 2 to substitute each `{{placeholder}}`. The table below c
 | `REVALIDATE_INSTRUCTION` | Imperative clause opening the Phase 6 re-verification sentence (capitalized, no trailing period; it is followed by "after every fix"). With a test suite: `Run \`$MVN test\``. Without one: `Re-run the Phase 3 manual validation checklist`. Must name the same check as `TEST_CMD` and `EXTERNAL_SIGNAL_CMD`. |
 | `EXTERNAL_SIGNAL_LABEL` | Short label for the anchor used in Phase 4 self-review. `CI` when the repo has CI workflows; `manual validation` when the project uses a fixture or test-command checklist (e.g. a doc-only repo); otherwise a project-specific phrase like `snapshot regression suite`. |
 | `EXTERNAL_SIGNAL_CMD` | The command or step list that produces the anchor signal, rendered as a fenced code block indented 3 spaces so it nests under the Phase 4 step 1 list item. For CI: a bash fence containing `gh pr checks <number> --watch`. For manual validation: a numbered checklist of validation steps wrapped in a fence (or written as a plain indented checklist). Whichever form is used, the entire substituted block must keep the 3-space indent on every line. |
-| `REVIEWER` | Primary reviewer from CODEOWNERS or recent PRs; `@copilot` if Copilot code review is configured. Write it as `@copilot`: the bare `Copilot` login fails with `Could not resolve user with login 'copilot'` (gh 2.92, verified 2026-10-04 on Dans-Plugins/Medieval-Factions#2088, where `@copilot` produced a review within minutes) |
+| `REVIEWER` | Primary human reviewer from CODEOWNERS or recent PRs, or unset. **Never Copilot** (`@copilot` / `Copilot` / `copilot-pull-request-reviewer`): Copilot review spends the GitHub Actions minutes CI needs, so it is off fleet-wide (owner decision 2026-11-18). If the only past reviewer was Copilot, leave `REVIEWER` unset and the loop goes straight to self-review. |
 | `SCAN_CHECKLIST` | Repo-specific anti-patterns found in CLAUDE.md + common ones for the language |
 | `CODE_PATTERNS` | Bullet list from CLAUDE.md; omit section if no CLAUDE.md |
 | `TEST_GUIDANCE` | Framework name, naming convention, file location, any fake/mock patterns |
