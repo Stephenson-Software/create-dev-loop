@@ -15,7 +15,7 @@ Generic AI coding assistants treat every repo the same. A tailored dev loop enco
 | Ignores your PR template | Fills it in from your PR template, whichever spelling and location it uses |
 | Doesn't know your branch convention | Enforces `feature/` or `fix/` based on your `CONTRIBUTING.md` |
 | Skips your linter | Runs `ruff check` / `eslint` / `golangci-lint` before every push |
-| Opens PRs with placeholder reviewers | Requests the right person from `CODEOWNERS` or adds `@copilot` |
+| Opens PRs with placeholder reviewers | Requests the right person from `CODEOWNERS` or recent PRs, or goes straight to self-review |
 | Repeats the same mistakes | Self-audits each cycle and files improvement issues |
 
 When Claude knows your build system, test suite, doc sources, and reviewer patterns, it doesn't drift. It ships work that passes CI, matches your conventions, and closes the right issues — without hand-holding.
@@ -72,7 +72,7 @@ Each generated `<slug>-dev-loop` skill encodes:
 - **Identity** — a one-sentence statement of what the skill optimizes for in this repo, naming the failure mode it actively rejects, inferred from `CLAUDE.md`, `CONTRIBUTING.md`, and recent PRs
 - **Build & test commands** — exact commands from CI or build files, not guesses; repos with no build system or no test suite get the project's real validation steps in their place, not an invented command
 - **Branch naming** — from `CONTRIBUTING.md` or inferred from recent branches
-- **Reviewer** — from `CODEOWNERS`, recent PR reviewers, or `@copilot` if Copilot code review is configured (the bare `Copilot` login does not resolve)
+- **Reviewer** — a human reviewer from `CODEOWNERS` or recent PR reviewers, or none, in which case the loop goes straight to its self-review. Copilot is never used as the reviewer: its review runs on GitHub Actions and spends the minutes CI needs
 - **Test guidance** — the test framework, naming convention, file location, and fake/mock patterns new tests must follow
 - **Lint/format step** — only if present in CI; omitted otherwise
 - **External signal anchor** — the objective check the self-review must be green against: CI where the repo has workflows, otherwise a manual-validation checklist or whatever else the project actually verifies against
